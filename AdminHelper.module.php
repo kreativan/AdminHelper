@@ -24,6 +24,11 @@ class AdminHelper extends WireData implements Module {
 
     if($this->isAdminPage()) {
 
+      // console.log(ProcessWire.config.crm);
+      $this->config->js('crm', [
+        'GET' => $_GET,
+      ]);
+
       // Always set system page to the bottom of the page tree
       $system_page = $this->pages->get("template=system");
       if($system_page != "" && $system_page->sort < 49) {
@@ -172,7 +177,7 @@ class AdminHelper extends WireData implements Module {
 
       // manipulate the json returned and remove any pages found from array
       $json = json_decode($event->return, true);
-      if($json) {
+      if($json && isset($json['children'])) {
         foreach($json['children'] as $key => $child){
           $c = $this->pages->get($child['id']);
           $pagetemplate = $c->template;
