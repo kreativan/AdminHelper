@@ -67,7 +67,7 @@ class AdminHelperConfig extends ModuleConfig {
     $f = $this->wire('modules')->get("InputfieldTextarea");
     $f->attr('name', 'js_files');
     $f->label = 'JavaScript Files';
-    $f->description = __("Load JavaScript files in admin. One file per line, relative to the modules folder...");
+    $f->description = __("Load JavaScript files in admin. One file per line.");
     $f->rows = 5;
     $inputfields->add($f);
 
