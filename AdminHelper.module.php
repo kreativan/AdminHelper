@@ -24,6 +24,8 @@ class AdminHelper extends WireData implements Module {
 
     if($this->isAdminPage()) {
 
+      $suffix = $this->config->debug ? '?v='.time() : '';
+
       // console.log(ProcessWire.config.crm);
       $this->config->js('crm', [
         'GET' => $_GET,
@@ -35,12 +37,12 @@ class AdminHelper extends WireData implements Module {
         $system_page->setAndSave("sort", 49);
       }
 
-      $this->config->scripts->append($this->module_url."/assets/drag-drop-sort.js");
+      $this->config->scripts->append($this->config->urls->siteModules ."AdminHelper/assets/drag-drop-sort.js");
+      $this->config->styles->append($this->config->urls->siteModules ."AdminHelper/assets/AdminHelper.css{$suffix}");
 
       if(!empty($this->js_files)) {
         $js_files = explode("\n", $this->js_files);
         foreach($js_files as $js) {
-          $suffix = $this->config->debug ? '?v='.time() : '';
           $this->config->scripts->append($js.$suffix);
         }
       }
@@ -71,13 +73,14 @@ class AdminHelper extends WireData implements Module {
   *  @param integer $id  Page ID
   *  @example href='{$this->pageEditLink($item->id)}';
   */
-  public function pageEditLink($id) {
+  public function pageEditLink($id, $back_url = "") {
     $currentURL = $_SERVER['REQUEST_URI'];
     $url_segment = explode('/', $currentURL);
     $url_segment = $url_segment[sizeof($url_segment)-1];
     // encode & to ~
     $url_segment = str_replace("&", "~", $url_segment);
     $segment1 = $this->input->urlSegment1 ? $this->input->urlSegment1."/" : "";
+    if($back_url != "") return $this->page->url . "edit/?id=$id&back_url={$back_url}";
     return $this->page->url . "edit/?id=$id&back_url={$segment1}{$url_segment}";
   }
 
