@@ -1,4 +1,6 @@
-$(document).ready(function () {
+function dragAndDropSort() {
+  
+  $(document).ready(function () {
 
   /**
    *  Sortable
@@ -18,7 +20,7 @@ $(document).ready(function () {
     });
   }
 
-  let ivmSortable = $('#wk-sortable');
+  let ivmSortable = $('#sortable');
   if(ivmSortable.length > 0) {
     $(function () {
 
@@ -26,7 +28,7 @@ $(document).ready(function () {
         handle: '.handle',
         stop: function (event, ui) {
 
-          $('#wk-sortable').css('opacity', '0.5');
+          $('#sortable').css('opacity', '0.5');
 
           var id = $(ui.item).attr('data-id');
           var nextID = $(ui.item).next().attr('data-id');
@@ -41,16 +43,18 @@ $(document).ready(function () {
             action: "drag_drop_sort",
           }).done(function (data) {
             // console.log('Data Loaded: ' + data);
-            $('#wk-sortable').css('opacity', '1');
+            $('#sortable').css('opacity', '1');
           });
 
         }
       });
 
-      $('#wk-sortable').disableSelection();
+      $('#sortable').disableSelection();
 
     });
 
   }
 
-});
+  });
+
+}
