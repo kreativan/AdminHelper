@@ -35,9 +35,11 @@ $adminHelper->autoloadFolder($folder);
 ```
 
 ## Utility
-`$util = $adminHelper->utility();`
 
 ```php
+
+$util = $adminHelper->utility();
+
 
 //
 // Valitron
@@ -65,6 +67,7 @@ if (!$errors) {
   // Success
 }
 
+
 //
 //  Helpers
 //
@@ -73,6 +76,7 @@ if (!$errors) {
 // Convert page.title to $page->title
 $string = "{select_page.url}";
 $util->formatPageString($string, $page);
+
 
 //
 // JSON
@@ -89,9 +93,9 @@ $util->json_encode($data_array);
 
 ## HTMX
 
-`$htmx = $adminHelper->htmx();`
-
 ```php
+$htmx = $adminHelper->htmx();
+
 // Page Edit Modal
 $htmx->pageEditModal($page_id, $data = []);
 // Page Create Modal
@@ -135,4 +139,185 @@ $htmx->modal($file_path, $data = []);
  * @return string - html attributes
  */
 $htmx->offcanvas($file_path, $data = []);
+```
+
+## AdminHelper.js
+Use AdminHelper.js to send ajax requests and submit forms and automatically trigger notifications, modals, reloads, htmx etc.. based on the response.
+
+### `ajaxReq()`
+```js
+// request url
+let url = './?id=123';
+
+// json data to pass to the request
+// can also send confirm message and description
+let data = {
+  'confirm_message': 'Are you Sure?', 
+  'confirm_meta': 'Are you sure you ant to send this request?',
+};
+
+// Enable modal confirm
+let confirm = true;
+
+// run ajax request
+adminHelper.ajaxReq(url, data, confirm);
+```
+Send ajax request to the `./?id=123` url, without any data and no confirm.
+```html
+<button onclick="adminHelper.ajaxReq('./?id=123', null, false)">
+  Ajax Request
+</button>
+```
+### `submit()`
+Standard form submit (no-ajax) based on the css selector.
+```js
+// Form css selector
+let css_selector = '#my_form';
+
+// Action name so we can indentify the request
+// if (isset($_POST['js_submit'])) { ... }
+let action_name = "js_submit";
+
+// Run form submit
+adminHelper.adminFormSubmit(css_selector, action_name);
+```
+Example form submit with `#my_form` css selector and `js_submit` action name.
+```php
+<?php
+if (isset($_POST['js_submit'])) {
+  // Do something
+}
+?>
+
+<!-- Form -->
+<form id="my_form" action="./" method="POST">
+  <label>Example</label>
+  <input type="text" name="example" />
+</form>
+
+<!-- submit button outside the form -->
+<button onclick="adminHelper.submit('#my_form', 'js_submit')">
+  Submit Form
+</button>
+``` 
+
+### `formSubmit()`
+Submit form with the ajax request to url specified in the form action attribute. Automatically collect form data, trigger notifications, modals, reloads, htmx etc.. based on the response.
+```js
+adnimHelper.formSubmit('#my_form');
+```
+Example:
+```php
+<?php
+/**
+ * Handle ajax form submit
+ * @see Ajax Response docs below for all supported response options
+ */
+if (isset($_POST['example'])) {
+
+  // Set JSON response
+  header('Content-Type: application/json');
+  echo json_encode([
+    'status' => 'success', // will also define notification style: success, warning, danger, error
+    'notification' => 'Form has been submitted!', // trigger uikit notification
+    'reset_form' => true,
+  ]);
+
+  exit();
+}
+?>
+
+<form id="my_form" action="./" method="POST">
+  <label>Example</label>
+  <input type="text" name="example" />
+</form>
+
+<button onclick="adminHelper.formSubmit('#my_form')">
+  Submit Form
+</button>
+``` 
+
+### Ajax Response
+When using `adminHelper` to send ajax request, you can automatically trigger notifications, modals, reloads, htmx etc.. based on the response.
+```php
+<?php
+$response = [
+
+  // Used also for notification color
+  // string: success, warning, danger, error
+  "status" => "pending", 
+
+  // Clear-reset form input values
+  "reset_form" => false,
+
+  // Response message
+  "message" => "Some response message",
+
+  // Notification, will trigger uikit notification
+  "notification" => "Notification: Ajax form submit was ok!",
+
+  // Will trigger modal on response, has priority over notification
+  "modal" => "<h3>Title</h3><p>text</p>",
+
+  // Same as 'modal'. Will trigger modal response, has priority over notification
+  "alert" => "<h3>Title</h3><p>text</p>",
+
+  // Will trigger dialog on response
+  // It is a nice wy to display iframe content in a modal
+  "dialog" => "<iframe src=''></iframe>",
+
+  // Set modal dialog width
+  "modal_width" => "1200px",
+
+  // Specify modal css ID that you want to remove on response
+  // this is usually htmx-modal, as its mainly used to remove htmx triggered modals
+  "close_modal_id" => "htmx-modal",
+
+  // Redirect after response. 
+  // If used with modal, will redirect after modal confirm... 
+  "redirect" => "/",
+
+  // Open new browser tab after response
+  "open_new_tab" => "example.com",
+
+  // Array of errors (strings), will trigger notification for each
+  // Eg: ['error one', 'email two']
+  "errors" => [],
+
+  // Array of invalid field names eg: ['name', 'email']
+  "error_fields" => [],
+
+  // Valitron errors 
+  // Pass the valitron errors directly to the response
+  "valitron" => $valitron->errors(),
+
+  // Run htmx sync on response
+  // Sync-update all DOM elements with the data-htmx attribute
+  "htmxSync" => 1,
+
+  // Will trigger htmx request on response
+  "htmx" => [
+    "type" => "GET",
+    "url" => "/", // or file
+    "target" => "#target-element",
+    "swap" => "innerHTML",
+    "indicator" => "#htmx-indicator",
+    "push_url" => "./",
+  ],
+
+  /**
+   * Update DOM element
+   * @param string $selector - css selector of the target element
+   * @param string $html - innerHTML to replace the target element with
+   */
+  "update_DOM" => [
+    "selector" => ".cart",
+    "html" => "1",
+  ],
+];
+
+header('Content-type: application/json');
+echo json_encode($response);
+exit();
+
 ```

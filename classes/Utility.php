@@ -1,8 +1,15 @@
 <?php
 
+/**
+ *  AdminHelper: Utility
+ *  @author Ivan Milincic <hello@kreativan.dev>
+ *  @link http://www.kraetivan.dev
+ */
+
 class AdminHelper_Utility extends WireData {
 
   public function __construct() {
+    // ...
   }
 
   // Check if current page is admin page
