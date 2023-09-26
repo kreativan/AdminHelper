@@ -243,59 +243,96 @@ When using `adminHelper` to send ajax request, you can automatically trigger not
 <?php
 $response = [
 
-  // Used also for notification color
-  // string: success, warning, danger, error
+  /**
+   * Used also for notification color
+   * string: success, warning, danger, error
+   */
   "status" => "pending", 
 
-  // Clear-reset form input values
+  /**
+   * Clear-reset form input values
+   */
   "reset_form" => false,
 
-  // Response message
+  /**
+   * Response message
+   */
   "message" => "Some response message",
 
-  // Notification, will trigger uikit notification
+  /**
+   * Notification
+   * Will trigger uikit notification
+   */
   "notification" => "Notification: Ajax form submit was ok!",
 
-  // Will trigger modal on response, has priority over notification
+  /**
+   * Will trigger uikit modal on response, 
+   * has priority over the notification
+   */ 
   "modal" => "<h3>Title</h3><p>text</p>",
 
-  // Same as 'modal'. Will trigger modal response, has priority over notification
+  /**
+   * Same as 'modal'...
+   * Will trigger alert response, 
+   */ 
   "alert" => "<h3>Title</h3><p>text</p>",
 
-  // Will trigger dialog on response
-  // It is a nice wy to display iframe content in a modal
+  /**
+   * Will trigger dialog on response 
+   * It is a good way to display iframe content in a modal
+   */ 
   "dialog" => "<iframe src=''></iframe>",
 
-  // Set modal dialog width
+  /**
+   * Set modal dialog width in px
+   */
   "modal_width" => "1200px",
 
-  // Specify modal css ID that you want to remove on response
-  // this is usually htmx-modal, as its mainly used to remove htmx triggered modals
+  /**
+   * Modal css ID that to remove on response (without #)
+   * this is usually htmx-modal, as its mainly used to remove htmx triggered modals
+   */ 
   "close_modal_id" => "htmx-modal",
 
-  // Redirect after response. 
-  // If used with modal, will redirect after modal confirm... 
+  /**
+   * Redirect after response. 
+   * If used with modal, will redirect after modal confirm...
+   */ 
   "redirect" => "/",
 
-  // Open new browser tab after response
+  /**
+   * Open new browser tab after response 
+   * @param string url
+   */
   "open_new_tab" => "example.com",
 
-  // Array of errors (strings), will trigger notification for each
-  // Eg: ['error one', 'email two']
+  /**
+   * Array of errors (strings), will trigger notification for each
+   * @example ['error one', 'email two']
+   */ 
   "errors" => [],
 
-  // Array of invalid field names eg: ['name', 'email']
+  /**
+   * Array of invalid form field names. Will add .error class
+   * @example ['name', 'email']
+   */ 
   "error_fields" => [],
 
-  // Valitron errors 
-  // Pass the valitron errors directly to the response
+  /**
+   * Valitron
+   * Pass the valitron errors directly to the response
+   */
   "valitron" => $valitron->errors(),
 
-  // Run htmx sync on response
-  // Sync-update all DOM elements with the data-htmx attribute
+  /**
+   * Run htmx sync on response
+   * Sync-update all DOM elements with the data-htmx attribute
+   */ 
   "htmxSync" => 1,
 
-  // Will trigger htmx request on response
+  /**
+   * Will trigger htmx request on response 
+   */
   "htmx" => [
     "type" => "GET",
     "url" => "/", // or file
@@ -320,4 +357,86 @@ header('Content-type: application/json');
 echo json_encode($response);
 exit();
 
+```
+
+### `confirm()`
+Use this method on links to ask for modal confirmation before navigating to the url.
+```html
+<a href="./?delete=1" onclick="adminHelper.confirm('Please Confirm', 'Are you sure you want to delete this item?')">
+  Delete
+</a>
+```
+
+### `toggleNav()`
+Toggle class on a target elements. Add class on the clicked element, remove from all others.
+```js
+// Target elements css class
+let target = '.menu-item';
+// Class to toggle
+let cls = 'uk-active';
+// Run toggle
+adminHelper.toggleNav(target, cls);
+```
+Example:
+```html
+<a href="#" onclick="toggleNav('.menu-item', 'uk-active')">
+  Toggle
+</a>
+```
+
+### `inputTypeConfirm()`
+On type (input text) toggle active class and icon on the next sibling element (button). 
+Useful when you need to confirm field value on type.
+```html
+<div class="text-input-field">
+
+  <!-- input -->
+  <input 
+    class="on-type-confirm" 
+    type="text" 
+    name="field_name" 
+    value="<?= $value ?>"
+    onkeyup="adminHelper.inputTypeConfirm()" 
+  />
+
+  <!-- sibling element (button) -->
+  <button type="button" class="<?= $value ? 'active' : 'uk-hidden' ?>">
+    <i class="fa fa-check"></i>
+  </button>
+
+</div>
+```
+
+### `togglePage()`, `trashPage()`, `deletePage()`
+Publish, Unpublish, Trash adn Delete pages via ajax request by passing the page id. Used for quick actions inside a table. It will also find the closest icon `<i>` element and set a spinning cog during the request.
+```js
+```html
+<tr>
+  <td>
+
+    <button onclick="adminHelper.togglePage(123)">
+      <i class="fa fa-toggle-on"></i>
+      Toggle
+    </button>
+
+    <button onclick="adminHelper.trashPage(123)">
+      <i class="fa fa-trash"></i>
+      Trash
+    </button>
+
+    <button onclick="adminHelper.deletePage(123)">
+      <i class="fa fa-times"></i>
+      Delete
+    </button>
+
+  </td>
+</tr>
+```
+
+### `bulkAction()`
+```js
+let action_name = 'bulk_delete';
+adminHelper.bulkAction(action_name);
+
+// TODO
 ```

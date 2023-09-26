@@ -44,10 +44,9 @@ class AdminHelper extends WireData implements Module {
      */
     $this->wire("AdminHelper", $this, true);
     $this->wire("adminHelper", $this, true);
-    $this->wire("helper", $this, true);
 
     /**
-     * system page global variable
+     * System page global variable
      * @var $system
      */
     $system_page = wire('pages')->get('template=system');
@@ -67,7 +66,7 @@ class AdminHelper extends WireData implements Module {
       ]);
 
       /**
-       * run hide pages hook
+       * Run hide pages hook
        * hide pages from page tree
        */
       $this->addHookAfter('ProcessPageList::execute', $this, 'hidePages');
@@ -85,10 +84,10 @@ class AdminHelper extends WireData implements Module {
       }
 
       // load assets
-      $this->config->scripts->append($this->url() . "assets/js/drag-drop-sort.js{$suffix}");
-      $this->config->scripts->append($this->url() . "assets/js/AdminHelper.js{$suffix}");
+      $this->config->scripts->append($this->url() . "lib/js/drag-drop-sort.js{$suffix}");
+      $this->config->scripts->append($this->url() . "lib/js/AdminHelper.js{$suffix}");
       if ($this->load_htmx) {
-        $this->config->scripts->append($this->url() . "assets/js/htmx.js");
+        $this->config->scripts->append($this->url() . "lib/js/htmx.js");
       }
 
       // Load js files specified in module settings
@@ -129,9 +128,9 @@ class AdminHelper extends WireData implements Module {
       'compress' => $this->debug ? false : true,
       'recompile' => false,
       'customLessFiles' => [
-        $this->path() . "assets/less/admin-vars.less",
-        $this->path() . "assets/less/admin-utility.less",
-        $this->path() . "assets/less/admin.less",
+        $this->path() . "lib/less/admin-vars.less",
+        $this->path() . "lib/less/admin-utility.less",
+        $this->path() . "lib/less/admin.less",
         $this->config->paths->templates . "admin.less",
       ],
     ];
@@ -174,11 +173,11 @@ class AdminHelper extends WireData implements Module {
       // Load assets for pageEditModal
       if ($this->input->get->modal && $this->page->name == "edit" && $this->input->get->context != 'PageTable') {
         $this->config->tracyDisabled = true;
-        $this->config->styles->append($this->url() . "assets/css/page-edit-modal.css{$suffix}");
-        $this->config->scripts->append($this->url() . "assets/js/page-edit-modal.js{$suffix}");
+        $this->config->styles->append($this->url() . "lib/css/page-edit-modal.css{$suffix}");
+        $this->config->scripts->append($this->url() . "lib/js/page-edit-modal.js{$suffix}");
       } elseif ($this->input->get->modal && $this->page->name == "edit" && $this->input->get->context == 'PageTable') {
         $this->config->tracyDisabled = true;
-        $this->config->styles->append($this->url() . "assets/css/page-edit-modal-page-table.css{$suffix}");
+        $this->config->styles->append($this->url() . "lib/css/page-edit-modal-page-table.css{$suffix}");
       }
     }
   }
@@ -249,13 +248,13 @@ class AdminHelper extends WireData implements Module {
 
   public function utility() {
     require_once(__DIR__ . '/classes/Utility.php');
-    $utility = new AdminHelper_Utility();
+    $utility = new \AdminHelper\Utility();
     return $utility;
   }
 
   public function htmx() {
     require_once(__DIR__ . '/classes/HTMX.php');
-    $htmx = new AdminHelper_HTMX();
+    $htmx = new \AdminHelper\HTMX();
     return $htmx;
   }
 

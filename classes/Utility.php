@@ -6,7 +6,11 @@
  *  @link http://www.kraetivan.dev
  */
 
-class AdminHelper_Utility extends WireData {
+namespace AdminHelper;
+
+use ProcessWire\WireData;
+
+class Utility extends WireData {
 
   public function __construct() {
     // ...
