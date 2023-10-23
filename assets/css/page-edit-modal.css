@@ -1,0 +1,24 @@
+.pw-notices {
+  /* display: none; */
+}
+
+body.modal .InputfieldForm,
+#ProcessPageEdit {
+  margin-top:0 !important;
+}
+
+
+#_ProcessPageEditChildren,
+.InputfieldPageTable {
+  display: none !important;
+}
+
+#wrap_template,
+#wrap_parent_id,
+#wrap_Inputfield_status li:not(:nth-child(1)):not(:nth-child(2)),
+#ProcessPageEditReferences,
+#ProcessPageEditRoles,
+#ProcessPageEditPrevPaths,
+#wrap_Inputfield__pw_page_name {
+	display: none;
+}

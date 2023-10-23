@@ -1,16 +1,6 @@
 <?php
 
-/**
- * AdminHelper: HTMX
- * @author Ivan Milincic <hello@kreativan.dev>
- * @link http://www.kraetivan.dev
- */
-
-namespace AdminHelper;
-
-use ProcessWire\WireData;
-
-class HTMX extends WireData {
+class AdminHelper_HTMX extends WireData {
 
   public function __construct() {
     $this->tmpl_folder = __DIR__ . '/../tmpl/';

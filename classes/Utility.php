@@ -1,19 +1,8 @@
 <?php
 
-/**
- *  AdminHelper: Utility
- *  @author Ivan Milincic <hello@kreativan.dev>
- *  @link http://www.kraetivan.dev
- */
-
-namespace AdminHelper;
-
-use ProcessWire\WireData;
-
-class Utility extends WireData {
+class AdminHelper_Utility extends WireData {
 
   public function __construct() {
-    // ...
   }
 
   // Check if current page is admin page

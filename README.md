@@ -35,11 +35,9 @@ $adminHelper->autoloadFolder($folder);
 ```
 
 ## Utility
+`$util = $adminHelper->utility();`
 
 ```php
-
-$util = $adminHelper->utility();
-
 
 //
 // Valitron
@@ -67,7 +65,6 @@ if (!$errors) {
   // Success
 }
 
-
 //
 //  Helpers
 //
@@ -76,7 +73,6 @@ if (!$errors) {
 // Convert page.title to $page->title
 $string = "{select_page.url}";
 $util->formatPageString($string, $page);
-
 
 //
 // JSON
@@ -93,9 +89,9 @@ $util->json_encode($data_array);
 
 ## HTMX
 
-```php
-$htmx = $adminHelper->htmx();
+`$htmx = $adminHelper->htmx();`
 
+```php
 // Page Edit Modal
 $htmx->pageEditModal($page_id, $data = []);
 // Page Create Modal
@@ -141,302 +137,28 @@ $htmx->modal($file_path, $data = []);
 $htmx->offcanvas($file_path, $data = []);
 ```
 
-## AdminHelper.js
-Use AdminHelper.js to send ajax requests and submit forms and automatically trigger notifications, modals, reloads, htmx etc.. based on the response.
-
-### `ajaxReq()`
-```js
-// request url
-let url = './?id=123';
-
-// json data to pass to the request
-// can also send confirm message and description
-let data = {
-  'confirm_message': 'Are you Sure?', 
-  'confirm_meta': 'Are you sure you ant to send this request?',
-};
-
-// Enable modal confirm
-let confirm = true;
-
-// run ajax request
-adminHelper.ajaxReq(url, data, confirm);
-```
-Send ajax request to the `./?id=123` url, without any data and no confirm.
-```html
-<button onclick="adminHelper.ajaxReq('./?id=123', null, false)">
-  Ajax Request
-</button>
-```
-### `submit()`
-Standard form submit (no-ajax) based on the css selector.
-```js
-// Form css selector
-let css_selector = '#my_form';
-
-// Action name so we can indentify the request
-// if (isset($_POST['js_submit'])) { ... }
-let action_name = "js_submit";
-
-// Run form submit
-adminHelper.adminFormSubmit(css_selector, action_name);
-```
-Example form submit with `#my_form` css selector and `js_submit` action name.
+## AdminTable
+Use `AdminHelper->adminTable()` and `AdminHelper->adminTableHtmx()` methods to create custom admin tables to manage and edit pages.     
+Pages will be edited in modal window, and if using `adminTableHtmx()` table will be reactive, no page reload.
 ```php
-<?php
-if (isset($_POST['js_submit'])) {
-  // Do something
-}
-?>
-
-<!-- Form -->
-<form id="my_form" action="./" method="POST">
-  <label>Example</label>
-  <input type="text" name="example" />
-</form>
-
-<!-- submit button outside the form -->
-<button onclick="adminHelper.submit('#my_form', 'js_submit')">
-  Submit Form
-</button>
-``` 
-
-### `formSubmit()`
-Submit form with the ajax request to url specified in the form action attribute. Automatically collect form data, trigger notifications, modals, reloads, htmx etc.. based on the response.
-```js
-adnimHelper.formSubmit('#my_form');
-```
-Example:
-```php
-<?php
-/**
- * Handle ajax form submit
- * @see Ajax Response docs below for all supported response options
- */
-if (isset($_POST['example'])) {
-
-  // Set JSON response
-  header('Content-Type: application/json');
-  echo json_encode([
-    'status' => 'success', // will also define notification style: success, warning, danger, error
-    'notification' => 'Form has been submitted!', // trigger uikit notification
-    'reset_form' => true,
-  ]);
-
-  exit();
-}
-?>
-
-<form id="my_form" action="./" method="POST">
-  <label>Example</label>
-  <input type="text" name="example" />
-</form>
-
-<button onclick="adminHelper.formSubmit('#my_form')">
-  Submit Form
-</button>
-``` 
-
-### Ajax Response
-When using `adminHelper` to send ajax request, you can automatically trigger notifications, modals, reloads, htmx etc.. based on the response.
-```php
-<?php
-$response = [
-
-  /**
-   * Used also for notification color
-   * string: success, warning, danger, error
-   */
-  "status" => "pending", 
-
-  /**
-   * Clear-reset form input values
-   */
-  "reset_form" => false,
-
-  /**
-   * Response message
-   */
-  "message" => "Some response message",
-
-  /**
-   * Notification
-   * Will trigger uikit notification
-   */
-  "notification" => "Notification: Ajax form submit was ok!",
-
-  /**
-   * Will trigger uikit modal on response, 
-   * has priority over the notification
-   */ 
-  "modal" => "<h3>Title</h3><p>text</p>",
-
-  /**
-   * Same as 'modal'...
-   * Will trigger alert response, 
-   */ 
-  "alert" => "<h3>Title</h3><p>text</p>",
-
-  /**
-   * Will trigger dialog on response 
-   * It is a good way to display iframe content in a modal
-   */ 
-  "dialog" => "<iframe src=''></iframe>",
-
-  /**
-   * Set modal dialog width in px
-   */
-  "modal_width" => "1200px",
-
-  /**
-   * Modal css ID that to remove on response (without #)
-   * this is usually htmx-modal, as its mainly used to remove htmx triggered modals
-   */ 
-  "close_modal_id" => "htmx-modal",
-
-  /**
-   * Redirect after response. 
-   * If used with modal, will redirect after modal confirm...
-   */ 
-  "redirect" => "/",
-
-  /**
-   * Open new browser tab after response 
-   * @param string url
-   */
-  "open_new_tab" => "example.com",
-
-  /**
-   * Array of errors (strings), will trigger notification for each
-   * @example ['error one', 'email two']
-   */ 
-  "errors" => [],
-
-  /**
-   * Array of invalid form field names. Will add .error class
-   * @example ['name', 'email']
-   */ 
-  "error_fields" => [],
-
-  /**
-   * Valitron
-   * Pass the valitron errors directly to the response
-   */
-  "valitron" => $valitron->errors(),
-
-  /**
-   * Run htmx sync on response
-   * Sync-update all DOM elements with the data-htmx attribute
-   */ 
-  "htmxSync" => 1,
-
-  /**
-   * Will trigger htmx request on response 
-   */
-  "htmx" => [
-    "type" => "GET",
-    "url" => "/", // or file
-    "target" => "#target-element",
-    "swap" => "innerHTML",
-    "indicator" => "#htmx-indicator",
-    "push_url" => "./",
+$AdminHelper->adminTableHtmx([
+  "selector" => "template=my-template, include=all, status!=trash",
+  "close_modal" => "true",
+  "table_actions" => "true",
+  "table_fields" => [
+    "Template" => "template.name",
+    "ID" => "id",
   ],
+]);
 
-  /**
-   * Update DOM element
-   * @param string $selector - css selector of the target element
-   * @param string $html - innerHTML to replace the target element with
-   */
-  "update_DOM" => [
-    "selector" => ".cart",
-    "html" => "1",
+// Or with full page reload on save
+$AdminHelper->adminTable([
+  "selector" => "template=my-template, include=all, status!=trash",
+  "table_actions" => "true",
+  "table_fields" => [
+    "Template" => "template.name",
+    "ID" => "id",
   ],
-];
+]);
 
-header('Content-type: application/json');
-echo json_encode($response);
-exit();
-
-```
-
-### `confirm()`
-Use this method on links to ask for modal confirmation before navigating to the url.
-```html
-<a href="./?delete=1" onclick="adminHelper.confirm('Please Confirm', 'Are you sure you want to delete this item?')">
-  Delete
-</a>
-```
-
-### `toggleNav()`
-Toggle class on a target elements. Add class on the clicked element, remove from all others.
-```js
-// Target elements css class
-let target = '.menu-item';
-// Class to toggle
-let cls = 'uk-active';
-// Run toggle
-adminHelper.toggleNav(target, cls);
-```
-Example:
-```html
-<a href="#" onclick="toggleNav('.menu-item', 'uk-active')">
-  Toggle
-</a>
-```
-
-### `inputTypeConfirm()`
-On type (input text) toggle active class and icon on the next sibling element (button). 
-Useful when you need to confirm field value on type.
-```html
-<div class="text-input-field">
-
-  <!-- input -->
-  <input 
-    class="on-type-confirm" 
-    type="text" 
-    name="field_name" 
-    value="<?= $value ?>"
-    onkeyup="adminHelper.inputTypeConfirm()" 
-  />
-
-  <!-- sibling element (button) -->
-  <button type="button" class="<?= $value ? 'active' : 'uk-hidden' ?>">
-    <i class="fa fa-check"></i>
-  </button>
-
-</div>
-```
-
-### `togglePage()`, `trashPage()`, `deletePage()`
-Publish, Unpublish, Trash adn Delete pages via ajax request by passing the page id. Used for quick actions inside a table. It will also find the closest icon `<i>` element and set a spinning cog during the request.
-```js
-```html
-<tr>
-  <td>
-
-    <button onclick="adminHelper.togglePage(123)">
-      <i class="fa fa-toggle-on"></i>
-      Toggle
-    </button>
-
-    <button onclick="adminHelper.trashPage(123)">
-      <i class="fa fa-trash"></i>
-      Trash
-    </button>
-
-    <button onclick="adminHelper.deletePage(123)">
-      <i class="fa fa-times"></i>
-      Delete
-    </button>
-
-  </td>
-</tr>
-```
-
-### `bulkAction()`
-```js
-let action_name = 'bulk_delete';
-adminHelper.bulkAction(action_name);
-
-// TODO
 ```
