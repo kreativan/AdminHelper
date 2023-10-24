@@ -429,18 +429,10 @@ class AdminHelper extends WireData implements Module {
    * @param $params['table_fields'] - array of fields to display in the table eg: ["Template" => "template.name", "ID" => "id"]
    * @param $params['close_modal'] - close modal after page edit
    * @param $params['table_actions'] - show table actions
+   * @param $paramsp['icon'] - icon to display in the table
    * @example $AdminHelper->adminTableHtmx($params);
    */
   public function adminTableHtmx($params = []) {
-    $selector = $params['selector'] ?? "";
-    $table_fields = $params['table_fields'] ?? [];
-    $close_modal = $params['close_modal'] ?? "false";
-    $table_actions = $params['table_actions'] ?? true;
-    $this->files->include(__DIR__ . "/tmpl/admin-table-htmx.php", [
-      "selector" => $selector,
-      "table_fields" => $table_fields,
-      "close_modal" => $close_modal,
-      "table_actions" => $table_actions,
-    ]);
+    $this->files->include(__DIR__ . "/tmpl/admin-table-htmx.php", $params);
   }
 }

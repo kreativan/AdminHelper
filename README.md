@@ -136,29 +136,3 @@ $htmx->modal($file_path, $data = []);
  */
 $htmx->offcanvas($file_path, $data = []);
 ```
-
-## AdminTable
-Use `AdminHelper->adminTable()` and `AdminHelper->adminTableHtmx()` methods to create custom admin tables to manage and edit pages.     
-Pages will be edited in modal window, and if using `adminTableHtmx()` table will be reactive, no page reload.
-```php
-$AdminHelper->adminTableHtmx([
-  "selector" => "template=my-template, include=all, status!=trash",
-  "close_modal" => "true",
-  "table_actions" => "true",
-  "table_fields" => [
-    "Template" => "template.name",
-    "ID" => "id",
-  ],
-]);
-
-// Or with full page reload on save
-$AdminHelper->adminTable([
-  "selector" => "template=my-template, include=all, status!=trash",
-  "table_actions" => "true",
-  "table_fields" => [
-    "Template" => "template.name",
-    "ID" => "id",
-  ],
-]);
-
-```

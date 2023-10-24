@@ -32,6 +32,8 @@ $table_actions = !empty($table_actions) ? $table_actions : "true";
 $table_actions = $input->get->table_actions ? $sanitizer->text($input->get->table_actions) : $table_actions;
 $table_actions = $table_actions == "true" ? true : false;
 
+$icon = !empty($icon) ? $icon : "";
+$icon = $input->get->icon ? $sanitizer->text($input->get->icon) : $icon;
 
 // Htmx data to pass to the table.php when loaded via htmx
 $htmx_data = [
@@ -39,6 +41,7 @@ $htmx_data = [
   'table_fields' => $table_fields,
   'close_modal' => $close_modal,
   'table_actions' => $table_actions,
+  'icon' => $icon,
 ];
 
 // Convert table_fields to array if it is json
@@ -52,10 +55,16 @@ $table_fields = is_array($table_fields) ? $table_fields : json_decode($table_fie
 
     <thead>
       <tr>
+        <?php if (!empty($icon)) : ?>
+          <th class="uk-table-shrink"></th>
+        <?php endif; ?>
         <th><?= __('Title') ?></th>
         <?php foreach ($table_fields as $key => $value) : ?>
           <th><?= $key ?></th>
         <?php endforeach; ?>
+        <?php if ($table_actions) : ?>
+          <th></th>
+        <?php endif; ?>
       </tr>
     </thead>
 
@@ -70,6 +79,12 @@ $table_fields = is_array($table_fields) ? $table_fields : json_decode($table_fie
           $modal_options = ['container' => 1, 'height' => '100%'];
         ?>
           <tr class="<?= $class ?>">
+
+            <?php if (!empty($icon)) : ?>
+              <td class="uk-table-shrink uk-text-center">
+                <i class="<?= $icon ?>"></i>
+              </td>
+            <?php endif; ?>
 
             <td>
               <a href="#" <?= $AdminHelper->htmx()->pageEditModal($item->id, $modal_options) ?>>
