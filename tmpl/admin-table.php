@@ -66,7 +66,7 @@ $multilang = !empty($multilang) && $multilang ? true : false;
               <?php
               foreach ($languages as $lang) {
                 if ($lang->name != "default") {
-                  echo $item->get("title|{$lang->name}") . " ({$lang->name})<br />";
+                  echo $item->getLanguageValue($lang, 'title') . " ({$lang->name})<br />";
                 }
               }
               ?>

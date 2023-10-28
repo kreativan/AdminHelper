@@ -100,7 +100,6 @@ $table_fields = is_array($table_fields) ? $table_fields : json_decode($table_fie
             <td>
               <a href="#" <?= $AdminHelper->htmx()->pageEditModal($item->id, $modal_options) ?>>
                 <?= $item->title ?>
-                <?= $item->get("title|bg"); ?>
               </a>
             </td>
 
@@ -109,7 +108,7 @@ $table_fields = is_array($table_fields) ? $table_fields : json_decode($table_fie
                 <?php
                 foreach ($languages as $lang) {
                   if ($lang->name != "default") {
-                    echo $item->get("title|{$lang->name}") . " ({$lang->name})<br />";
+                    echo $item->getLanguageValue($lang, 'title') . " ({$lang->name})<br />";
                   }
                 }
                 ?>
