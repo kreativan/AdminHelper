@@ -435,4 +435,22 @@ class AdminHelper extends WireData implements Module {
   public function adminTableHtmx($params = []) {
     $this->files->include(__DIR__ . "/tmpl/admin-table-htmx.php", $params);
   }
+
+  /**
+   * Render Admin Tabs
+   * @param array $tabs - ['tab_name_1' => [], 'tab_name_2' => []]
+   * @param string $active_var - $_GET variable to set active tab
+   * 
+   * @example $AdminHelper->adminTabs($tabs, 'taxonomy');
+   * In this example tab will be active if ($input->get->taxonomy == 'tab_name')
+   * 
+   * Tabs array items:
+   * @var string $tab['title']
+   * @var string $tab['url'] - "./?taxonomy=tab_name"
+   * @var string $tab['icon']
+   * @var bool $tab['visible']
+   */
+  public function adminTabs($tabs, $active_var = "tab") {
+    $this->files->include(__DIR__ . "/tmpl/admin-tabs.php", ['tabs' => $tabs, 'active_var' => $active_var]);
+  }
 }

@@ -19,7 +19,7 @@ window.addEventListener("DOMContentLoaded", function () {
   buttons.forEach(e => {
 
     e.addEventListener('click', function () {
-      
+
       setTimeout(() => {
         if (htmxElements && htmxElements.length > 0) {
           adminHelper.htmxSync(htmxElements, true, false);

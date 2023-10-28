@@ -32,6 +32,11 @@ $table_actions = !empty($table_actions) ? $table_actions : "true";
 $table_actions = $input->get->table_actions ? $sanitizer->text($input->get->table_actions) : $table_actions;
 $table_actions = $table_actions == "true" ? true : false;
 
+// Multi-language
+$multilang = !empty($multilang) ? $multilang : "true";
+$multilang = $input->get->multilang ? $sanitizer->text($input->get->multilang) : $multilang;
+$multilang = $multilang == "true" ? true : false;
+
 $icon = !empty($icon) ? $icon : "";
 $icon = $input->get->icon ? $sanitizer->text($input->get->icon) : $icon;
 
@@ -46,7 +51,6 @@ $htmx_data = [
 
 // Convert table_fields to array if it is json
 $table_fields = is_array($table_fields) ? $table_fields : json_decode($table_fields, true);
-
 ?>
 
 <div id="admin-table-htmx" data-htmx="<?= __DIR__ . "/admin-table-htmx.php" ?>" data-vals='<?= $AdminHelper->json_encode($htmx_data) ?>' data-close-modal="<?= $close_modal ?>">
@@ -58,10 +62,17 @@ $table_fields = is_array($table_fields) ? $table_fields : json_decode($table_fie
         <?php if (!empty($icon)) : ?>
           <th class="uk-table-shrink"></th>
         <?php endif; ?>
+
         <th><?= __('Title') ?></th>
+
+        <?php if ($multilang && $languages && count($languages) > 0) : ?>
+          <th><?= __('Multi-language') ?></th>
+        <?php endif; ?>
+
         <?php foreach ($table_fields as $key => $value) : ?>
           <th><?= $key ?></th>
         <?php endforeach; ?>
+
         <?php if ($table_actions) : ?>
           <th></th>
         <?php endif; ?>
@@ -89,14 +100,27 @@ $table_fields = is_array($table_fields) ? $table_fields : json_decode($table_fie
             <td>
               <a href="#" <?= $AdminHelper->htmx()->pageEditModal($item->id, $modal_options) ?>>
                 <?= $item->title ?>
+                <?= $item->get("title|bg"); ?>
               </a>
             </td>
+
+            <?php if ($multilang && $languages && count($languages) > 1) : ?>
+              <td class="uk-text-small">
+                <?php
+                foreach ($languages as $lang) {
+                  if ($lang->name != "default") {
+                    echo $item->get("title|{$lang->name}") . " ({$lang->name})<br />";
+                  }
+                }
+                ?>
+              </td>
+            <?php endif; ?>
 
             <!-- additional fields -->
             <?php foreach ($table_fields as $key => $value) :
               $val = $item->{$value};
             ?>
-              <td>
+              <td class="admin-table-<?= $sanitizer->fieldName($value) ?> uk-text-small">
                 <?= !empty($val) ? $val : "-" ?>
               </td>
             <?php endforeach; ?>

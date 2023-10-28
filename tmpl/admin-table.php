@@ -22,6 +22,9 @@ $items = $pages->find($selector);
 // Show table actions publish-unpublish, trash
 $table_actions = !empty($table_actions) && $table_actions ? true : false;
 
+// Multi-language
+$multilang = !empty($multilang) && $multilang ? true : false;
+
 ?>
 
 <table class="AdminDataTableSortable uk-table uk-table-striped uk-table-middle uk-table-small uk-margin-remove">
@@ -29,6 +32,11 @@ $table_actions = !empty($table_actions) && $table_actions ? true : false;
   <thead>
     <tr>
       <th><?= __('Title') ?></th>
+
+      <?php if ($multilang && $languages && count($languages) > 0) : ?>
+        <th><?= __('Multi-language') ?></th>
+      <?php endif; ?>
+
       <?php foreach ($table_fields as $key => $value) : ?>
         <th><?= $key ?></th>
       <?php endforeach; ?>
@@ -53,11 +61,23 @@ $table_actions = !empty($table_actions) && $table_actions ? true : false;
             </a>
           </td>
 
+          <?php if ($multilang && $languages && count($languages) > 1) : ?>
+            <td class="uk-text-small">
+              <?php
+              foreach ($languages as $lang) {
+                if ($lang->name != "default") {
+                  echo $item->get("title|{$lang->name}") . " ({$lang->name})<br />";
+                }
+              }
+              ?>
+            </td>
+          <?php endif; ?>
+
           <!-- additional fields -->
           <?php foreach ($table_fields as $key => $value) :
             $val = $item->{$value};
           ?>
-            <td>
+            <td class="admin-table-<?= $sanitizer->fieldName($value) ?> uk-text-small">
               <?= !empty($val) ? $val : "-" ?>
             </td>
           <?php endforeach; ?>
