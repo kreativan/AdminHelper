@@ -65,7 +65,7 @@ $table_fields = is_array($table_fields) ? $table_fields : json_decode($table_fie
 
         <th><?= __('Title') ?></th>
 
-        <?php if ($multilang && $languages && count($languages) > 0) : ?>
+        <?php if ($multilang && !empty($languages) && count($languages) > 0) : ?>
           <th><?= __('Multi-language') ?></th>
         <?php endif; ?>
 
