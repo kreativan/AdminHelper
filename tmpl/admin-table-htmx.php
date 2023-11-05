@@ -103,7 +103,7 @@ $table_fields = is_array($table_fields) ? $table_fields : json_decode($table_fie
               </a>
             </td>
 
-            <?php if ($multilang && $languages && count($languages) > 1) : ?>
+            <?php if ($multilang && !empty($languages) && count($languages) > 1) : ?>
               <td class="uk-text-small">
                 <?php
                 foreach ($languages as $lang) {
