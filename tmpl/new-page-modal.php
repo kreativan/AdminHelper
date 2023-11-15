@@ -22,9 +22,9 @@ $template_id = $input->get->template_id;
         <button class="uk-modal-close uk-position-center-right uk-margin-right" uk-close></button>
       </div>
 
-      <div class="uk-modal-body">
+      <div class="Inputfields uk-modal-body">
         <div class="uk-margin">
-          <label class="uk-form-label">
+          <label class="uk-form-label uk-text-bold">
             Title
             <span class="uk-text-danger">*</span>
           </label>

@@ -9,6 +9,7 @@ class AdminHelper_HTMX extends WireData {
     $this->page_create_modal = $this->tmpl_folder . 'page-create-modal.php';
     $this->new_page_modal = $this->tmpl_folder . 'new-page-modal.php';
     $this->admin_menu_offcanvas = $this->tmpl_folder . 'admin-menu-offcanvas.php';
+    $this->template_edit_modal = $this->tmpl_folder . 'template-edit-modal.php';
   }
 
   /**
@@ -179,6 +180,11 @@ class AdminHelper_HTMX extends WireData {
   public function pageEditModal($id = null, $data = []) {
 
     $src = $this->config->urls->admin . "page/edit/?id={$id}&modal=1";
+    $remove_tabs = !empty($data['remove_tabs']) && $data['remove_tabs'] ? true : false;
+    $remove_delete_tab = !empty($data['remove_delete_tab']) && $data['remove_delete_tab'] ? true : false;
+    $src = $remove_tabs ? $src . "&remove_tabs=1" : $src;
+    $src = $remove_delete_tab ? $src . "&remove_delete_tab=1" : $src;
+
     $onclick = "adminHelper.htmxModal()";
     $indicator = !empty($data['indicator']) ? $data['indicator'] : false;
 
@@ -198,12 +204,13 @@ class AdminHelper_HTMX extends WireData {
 
   /**
    * Create page in modal window
+   * Default processwire page create form
    * @param int $parent_id - parent page id
    * @param int $template_id - template id
    * @param array $vals - additional data to pass to the template file
    * @return string - html attributes
    */
-  public function pageCreateModal($parent_id, $template_id, $vals = []) {
+  public function pageCreateModal($parent_id, $template_id = "", $vals = []) {
 
     $onclick = "adminHelper.htmxModal()";
 
@@ -223,6 +230,7 @@ class AdminHelper_HTMX extends WireData {
 
   /**
    * New Page Modal
+   * Custom simple page create form with the title only
    * @param int $parent_id - parent page id
    * @param int $template_id - template id
    */

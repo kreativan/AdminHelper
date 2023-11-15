@@ -136,3 +136,41 @@ $htmx->modal($file_path, $data = []);
  */
 $htmx->offcanvas($file_path, $data = []);
 ```
+
+## Admin Table
+Render 'reactive' htmx driven admin table
+
+```php
+<?php
+
+$selector = "template=basic-page, include=all, status!=trash";
+
+$AdminHelper->adminTableHtmx([
+  // selector to find pages
+  "selector" => $selector,
+  // close modal after page save
+  "close_modal" => "true",
+  // display page publish-unpublish and page trash icons
+  "table_actions" => "false",
+  // display multi-language table data (th and td)
+  "multilang" => "true",
+  // remove tabs from modal edit
+  "remove_tabs" => "false",
+  // remove delete tab if page has references
+  "delete_tab" => "true",
+   // link to page references ui 
+  "references" => "true",
+  // dropdown menu file path
+  "dropdown_file" => false,
+  // display label - field to use for the label or false
+  "label" => false,
+  // table fields [label => field_name]
+  // you can use dot to get and subfield value eg: "template.name"
+  "table_fields" => [
+    'Value' => 'value',
+    "Name" => "name",
+    //'Ref.' => 'references.count',
+    "ID" => "id",
+  ],
+]);
+```

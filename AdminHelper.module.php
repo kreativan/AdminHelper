@@ -85,8 +85,8 @@ class AdminHelper extends WireData implements Module {
       }
 
       // load assets
-      $this->config->scripts->append($this->url() . "assets/js/drag-drop-sort.js{$suffix}");
-      $this->config->scripts->append($this->url() . "assets/js/AdminHelper.js{$suffix}");
+      $this->config->scripts->append($this->url() . "assets/js/drag-drop-sort.js");
+      $this->config->scripts->append($this->url() . "assets/js/AdminHelper.js");
       if ($this->load_htmx) {
         $this->config->scripts->append($this->url() . "assets/js/htmx.js");
       }
@@ -103,9 +103,9 @@ class AdminHelper extends WireData implements Module {
        * Watch and handle drag and drop request
        */
       if ($this->input->post->action == "drag_drop_sort") {
-        $id = $this->sanitizer->int($this->input->post->id);
+        $id = $this->sanitizer->int($this->input->post->drag_drop_page_id);
         $p = $this->pages->get($id);
-        $next_id = $this->sanitizer->int($this->input->post->next_id);
+        $next_id = $this->sanitizer->int($this->input->post->drag_drop_next_id);
         $next_page = (!empty($next_id)) ? $this->pages->get($next_id) : "";
         $this->dragDropSort($p, $next_page);
       }

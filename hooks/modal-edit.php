@@ -10,11 +10,11 @@ namespace ProcessWire;
  * On front-end edit modal
  * Remove delete and settings tab from FieldsetPage
  */
-if ($this->input->get->modal) {
+if ($this->input->get->modal && $this->input->get->id) {
 
-  $class_name = $this->pages->get($this->input->get->id)->className();
+  $page = $this->pages->get($this->input->get->id);
 
-  if ($class_name == "FieldsetPage" || $this->input->get->remove_tabs) {
+  if ($page->className() == "FieldsetPage" || $this->input->get->remove_tabs) {
     $this->addHookAfter('ProcessPageEdit::buildFormDelete', function ($event) {
       $wrapper = $event->return;
       $wrapper->collapsed = Inputfield::collapsedHidden;
@@ -27,6 +27,13 @@ if ($this->input->get->modal) {
       $wrapper->collapsed = Inputfield::collapsedHidden;
       $process = $event->object;
       $process->removeTab('ProcessPageEditSettings');
+    });
+  } elseif ($this->input->get->remove_delete_tab) {
+    $this->addHookAfter('ProcessPageEdit::buildFormDelete', function ($event) {
+      $wrapper = $event->return;
+      $wrapper->collapsed = Inputfield::collapsedHidden;
+      $process = $event->object;
+      $process->removeTab('ProcessPageEditDelete');
     });
   }
 }

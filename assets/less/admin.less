@@ -2,6 +2,10 @@
   AdminHelper Less
 =========================================================== */
 
+.modal.ProcessPageAdd #wrap_template {
+  display: block !important;
+}
+
 //------------------------------------------------- 
 //  dialog
 //-------------------------------------------------
@@ -58,7 +62,7 @@ input.error {
   border-color: @helper-danger !important;
 }
 
-.input-type-confirm+* {
+.input-type-confirm + * {
 
   position: absolute;
   right: 7px;
@@ -96,11 +100,11 @@ input.error {
     margin-left: -@helper-grid-divider-space;
   }
 
-  .uk-grid-divider>* {
+  .uk-grid-divider > * {
     padding-left: @helper-grid-divider-space;
   }
 
-  .uk-grid-divider> :not(.uk-first-column)::before {
+  .uk-grid-divider > :not(.uk-first-column)::before {
     left: @helper-grid-divider-space / 2;
   }
 }
@@ -242,7 +246,7 @@ table .ui-sortable-helper {
 
 #sortable {
 
-  a>.fa {
+  a > .fa {
     font-size: 20px;
   }
 
@@ -252,7 +256,7 @@ table .ui-sortable-helper {
 
 }
 
-.ui-sortable-helper>td:not(:first-child):not(:nth-child(2)) {
+.ui-sortable-helper > td:not(:first-child):not(:nth-child(2)) {
   display: none;
 }
 
@@ -285,7 +289,7 @@ table .ui-sortable-helper {
     height: 18px;
   }
 
-  &.uk-tab-left>li>a {
+  &.uk-tab-left > li > a {
     border-top: 0;
     border-left: 0;
     border-radius: 0 !important;
@@ -293,7 +297,7 @@ table .ui-sortable-helper {
     padding: 7px 20px 7px 0px !important;
   }
 
-  &.uk-tab-left>li.uk-active>a {
+  &.uk-tab-left > li.uk-active > a {
     border-top: 0;
     border-left: 0;
     border-right: 2px solid @global-primary-background;
@@ -357,7 +361,7 @@ table .ui-sortable-helper {
   overflow: hidden;
   z-index: 99;
 
-  .uk-nav>li>a {
+  .uk-nav > li > a {
     padding: 7px 15px;
 
     i {
@@ -365,18 +369,18 @@ table .ui-sortable-helper {
     }
   }
 
-  .uk-nav>li:hover>a {
+  .uk-nav > li:hover > a {
     background: @helper-muted;
   }
 
-  .uk-nav>li+li>a {
+  .uk-nav > li + li > a {
     border-top: 1px solid @global-border;
   }
 
-  &>.uk-spinner {
+  & > .uk-spinner {
     padding: 20px;
 
-    &>svg {
+    & > svg {
       width: 20px !important;
       height: 20px !important;
     }

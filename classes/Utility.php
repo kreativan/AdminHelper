@@ -90,6 +90,51 @@ class AdminHelper_Utility extends WireData {
   // Validation 
   // ========================================================= 
 
+  public function validatePOST($params = [], $lang = '') {
+    return $this->get_req_errors($params, $lang);
+  }
+
+  /**
+   * Validate POST data using $this->valitron() method
+   * @param array $params
+   * @param string $lang
+   * @return array|bool false if POST is valid - array of errors if not
+   * 
+   * @example
+   * $errors = $this->get_req_errors([
+   *  'labels' => ['name' => 'Your Name', 'email' => 'Your Email'],
+   *  'required' => ['name', 'email'],
+   *  'email' => ['email' ],
+   *  'integer' => ['age', 'days'],
+   * ], 'en');
+   * if (!$errors) // is valid
+   */
+  public function get_req_errors($params = [], $lang = '') {
+
+    $labels = !empty($params['labels']) ? $params['labels'] : [];
+    $required = !empty($params['required']) ? $params['required'] : []; // field names
+
+    // exclude from rules
+    $exc = ['labels', 'required'];
+
+    $v = $this->valitron($_REQUEST, $lang);
+    $v->labels($labels);
+    $v->rule('required', $required);
+
+    // add all params except excluded as rules
+    foreach ($params as $key => $array) {
+      if (!in_array($key, $exc)) {
+        $v->rule($key, $array);
+      }
+    }
+
+    if (!$v->validate()) {
+      return $v->errors();
+    } else {
+      return false;
+    }
+  }
+
   /**
    * Init valitron validation library
    * @see $this->validatePOST() for usage
@@ -109,46 +154,5 @@ class AdminHelper_Utility extends WireData {
 
     // return valitron instance
     return $v;
-  }
-
-  /**
-   * Validate POST data using $this->valitron() method
-   * @param array $params
-   * @param string $lang
-   * @return array|bool false if POST is valid - array of errors if not
-   * 
-   * @example
-   * $errors = $adminHelper->validatePOST([
-   *  'labels' => ['name' => 'Your Name', 'email' => 'Your Email'],
-   *  'required' => ['name', 'email'],
-   *  'email' => ['email' ],
-   *  'integer' => ['age', 'days'],
-   * ], 'en');
-   * 
-   */
-  public function validatePOST($params = [], $lang = '') {
-
-    $labels = !empty($params['labels']) ? $params['labels'] : [];
-    $required = !empty($params['required']) ? $params['required'] : []; // field names
-
-    // exclude from rules
-    $exc = ['labels', 'required'];
-
-    $v = $this->valitron($_POST, $lang);
-    $v->labels($labels);
-    $v->rule('required', $required);
-
-    // add all params except excluded as rules
-    foreach ($params as $key => $array) {
-      if (!in_array($key, $exc)) {
-        $v->rule($key, $array);
-      }
-    }
-
-    if (!$v->validate()) {
-      return $v->errors();
-    } else {
-      return false;
-    }
   }
 }

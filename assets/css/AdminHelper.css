@@ -3,7 +3,6 @@
   --green: #3eb998;
 }
 
-
 @media(min-width: 1200px) {
   .ui-dialog.ui-dialog.ui-corner-all {
     left: 5% !important;

@@ -83,12 +83,6 @@ class AdminHelperConfig extends ModuleConfig {
     $f->rows = 5;
     $inputfields->add($f);
 
-    // js_files_suffix suffix
-    $f = $this->wire('modules')->get("InputfieldText");
-    $f->attr('name', 'js_files_suffix');
-    $f->label = 'JavaScript Files Suffix (for cache bust)';
-    $inputfields->add($f);
-
     // render fields
     return $inputfields;
   }

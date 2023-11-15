@@ -5,9 +5,9 @@ namespace ProcessWire;
 $src = $config->urls->admin . "page/add/?modal=1";
 if ($input->get->parent_id) $src .= "&parent_id={$input->get->parent_id}";
 if ($input->get->template_id) $src .= "&template_id={$input->get->template_id}";
-$height = !empty($input->get->height) ? $input->get->height : '80%';
+$height = !empty($input->get->height) ? $input->get->height : '95%';
 $container = $input->get->container;
-$container = !empty($container) && $container == 1 ? true : false;
+$container = empty($container) || !$container ? true : false;
 ?>
 
 <div id="htmx-modal" class="page-create-modal uk-flex-top <?= $container ? 'uk-modal-container' : '' ?>" uk-modal="bg-close: true">
