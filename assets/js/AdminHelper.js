@@ -224,9 +224,11 @@ const adminHelper = (function () {
     // Just a notification
     // based on a response status
     else if (response.notification) {
+      let notification_status = response.status ? response.status : 'primary';
+      notification_status = notification_status == 'error' ? 'danger' : notification_status;
       UIkit.notification({
         message: response.notification,
-        status: response.status ? response.status : 'primary',
+        status: notification_status,
         pos: response.notification_pos ? response.notification_pos : 'top-right',
         timeout: 3000
       });
@@ -353,7 +355,7 @@ const adminHelper = (function () {
 
   /**
    * Submit Form Data to the form action url
-   * This should be like: /ajax/example/
+   * You can use <div data-action data-method> instead of <form> element
    * @param {string} form_id 
    */
   methods.formSubmit = async function (form_id) {
@@ -391,11 +393,13 @@ const adminHelper = (function () {
      * Fetch Options
      * url - based on form action or data-action attribute
      * method -  based on form method or data-method attribute
+     * so you can use <div data-action data-method> instead of <form> element
      */
     let ajaxUrl = form.getAttribute("action");
     if (!ajaxUrl) ajaxUrl = form.getAttribute("data-action");
     let formMethod = form.getAttribute("method");
     if (!formMethod) formMethod = form.getAttribute("data-method");
+    if (!formMethod) formMethod = "POST";
 
     /**
      * Use this.formData() method
@@ -414,6 +418,11 @@ const adminHelper = (function () {
 
     // Get the response
     let response = await request.json();
+
+    // Log response if debug mode is enabled
+    if (ProcessWire.config.AdminHelper.debug === true) {
+      console.log(response);
+    }
 
     // if reset-form clear form fields
     if (response.reset_form) this.formClear(form_id);
@@ -473,13 +482,14 @@ const adminHelper = (function () {
   methods.formData = function (form_id, data = null) {
     let fields = this.formFields(form_id);
     let formData = new FormData();
+    formData.append('admin_helper_ajax', '1');
     if (data) {
       for (const item in data) formData.append(item, data[item]);
     }
     fields.forEach((e) => {
       let type = e.getAttribute('type');
       let name = e.getAttribute("name");
-			if (type === 'radio' || type === 'checkbox') {
+      if (type === 'radio' || type === 'checkbox') {
         if (e.checked) formData.append(name, e.value);
       } else if (type === "date") {
         formData.append(name, e.value);
@@ -703,7 +713,7 @@ const adminHelper = (function () {
     let tr = event.target.closest("tr");
     let icon = event.target.closest("i");
     if (icon) icon.classList.add("cog-spin");
-    const req = await fetch(`./?action=publish-ajax&id=${id}`);
+    const req = await fetch(`./?admin_action=publish-ajax&id=${id}`);
     let response = await req.json();
     if (icon) icon.classList.remove("cog-spin");
     if (response) this.ajaxResponse(response);
@@ -727,32 +737,9 @@ const adminHelper = (function () {
       return false;
     });
     if (confirm) {
-      const req = await fetch(`./?action=trash-ajax&id=${id}`);
+      const req = await fetch(`./?admin_action=trash-ajax&id=${id}`);
       let response = await req.json();
       if (response) this.ajaxResponse(response);
-      //if (tr) tr.remove();
-      if (reload) {
-        window.location.href = reload;
-      } else {
-        this.htmxSync();
-      }
-    }
-  }
-
-  /**
-   * Delete page
-   * @param {int} id 
-   */
-  methods.deletePage = async function (id, reload = false) {
-    event.preventDefault();
-    let tr = event.target.closest("tr");
-    const confirm = await UIkit.modal.confirm('<div class="uk-text-large uk-text-center">Are you sure?</div>').then(function () {
-      return true;
-    }, function () {
-      return false;
-    });
-    if (confirm) {
-      const req = await fetch(`./?ajax_action=trash&id=${id}`);
       //if (tr) tr.remove();
       if (reload) {
         window.location.href = reload;
@@ -808,7 +795,7 @@ const adminHelper = (function () {
       let strArray = JSON.stringify(items);
       // console.log(items);
       let formData = new FormData();
-      formData.append("ajax_bulk", action_name);
+      formData.append("admin_action_bulk", action_name);
       formData.append("admin_items", strArray);
 
       const response = await fetch("./", {

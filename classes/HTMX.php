@@ -1,9 +1,13 @@
 <?php
 
-class AdminHelper_HTMX extends WireData {
+namespace AdminHelper;
+
+use ProcessWire\WireData;
+
+class HTMX extends WireData {
 
   public function __construct() {
-    $this->tmpl_folder = __DIR__ . '/../tmpl/';
+    $this->tmpl_folder = __DIR__ . '/../markup/';
 
     $this->page_edit_modal = $this->tmpl_folder . 'page-edit-modal.php';
     $this->page_create_modal = $this->tmpl_folder . 'page-create-modal.php';
@@ -35,42 +39,28 @@ class AdminHelper_HTMX extends WireData {
     }
   }
 
+  // --------------------------------------------------------- 
+  // Requests
+  // --------------------------------------------------------- 
+
   /**
-   * HTMX Request using only array as params
-   * @param string $url - url or file path, if file path then $htmx_get = true
-   * @param array $data
-   * @param bool $htmx_get - if true then $url will be ?htmx=$url, if false then $url will be $url
-   * @return string - HTMX attributes
+   * Submit GET req to the same url
+   * and include $data as query string.
+   * HTMX will replace the #pw-content-body
+   * It is ment to be used for quick GET requests.
+   * @param array $data - [$key => $val]
+   * @example "./?modal=1&key=value"
+   * @example $htmx->GET(['key' => 'val]);
    */
-  public function req($url, $data = [], $htmx_get = true) {
-
-    $url = $htmx_get ? "?htmx=$url" : $url;
-
-    $method = !empty($data["method"]) ? $data["method"] : "get";
-    $trigger = !empty($data["trigger"]) ? $data["trigger"] : "click";
-    $target = !empty($data["target"]) ? $data["target"] : false;
-    $select = !empty($data["select"]) ? $data["select"] : false;
-    $swap = !empty($data["swap"]) ? $data["swap"] : false;
-    $indicator = !empty($data["indicator"]) ? $data["indicator"] : "";
-    $push_url = !empty($data["push_url"]) ? $data["push_url"] : false;
-
-    $vals = !empty($data["vals"]) ? $data["vals"] : $data;
-    if ($vals && is_array($vals)) $vals = json_encode($vals);
-
-    if ($method == 'get') {
-      $attr = "hx-get='{$url}'";
-    } else {
-      $attr = "hx-post='{$url}'";
-    }
-
-    $attr .= " hx-trigger='$trigger'";
-    if ($target) $attr .= " hx-target='$target'";
-    if ($select) $attr .= " hx-select='$select'";
-    if ($swap) $attr .= " hx-swap='$swap'";
-    if ($indicator) $attr .= " hx-indicator='$indicator'";
-    if ($push_url) $attr .= " hx-push-url='$push_url'";
-    if ($vals) $attr .= " hx-vals='$vals'";
-
+  public function submit($data = []) {
+    $segments = "?modal=1&is_htmx_submit=1";
+    foreach ($data as $key => $val) {
+      $segments .= "&{$key}={$val}";
+    };
+    $attr = "hx-get='./$segments'";
+    $attr .= " hx-target='#pw-content-body'";
+    $attr .= " hx-select='#pw-content-body'";
+    $attr .= " hx-swap='outerHTML'";
     return $attr;
   }
 
@@ -182,8 +172,11 @@ class AdminHelper_HTMX extends WireData {
     $src = $this->config->urls->admin . "page/edit/?id={$id}&modal=1";
     $remove_tabs = !empty($data['remove_tabs']) && $data['remove_tabs'] ? true : false;
     $remove_delete_tab = !empty($data['remove_delete_tab']) && $data['remove_delete_tab'] ? true : false;
+    $remove_settings_tab = !empty($data['remove_settings_tab']) && $data['remove_settings_tab'] ? true : false;
+
     $src = $remove_tabs ? $src . "&remove_tabs=1" : $src;
     $src = $remove_delete_tab ? $src . "&remove_delete_tab=1" : $src;
+    $src = $remove_settings_tab ? $src . "&remove_settings_tab=1" : $src;
 
     $onclick = "adminHelper.htmxModal()";
     $indicator = !empty($data['indicator']) ? $data['indicator'] : false;
@@ -256,5 +249,19 @@ class AdminHelper_HTMX extends WireData {
    */
   public function adminMenuOffcanvas() {
     return $this->offcanvas($this->admin_menu_offcanvas);
+  }
+
+  /**
+   * Send Email Modal
+   * @param array $data
+   * @param $data['to'] - pre-populate email address 
+   * @param $data['page_ref'] - add hidden page reference field ID
+   */
+  public function emailModal($data = []) {
+    return $this->modal($this->tmpl_folder . 'email-modal.php', $data);
+  }
+
+  public function email_modal($data = []) {
+    return $this->modal($this->tmpl_folder . 'email-modal.php', $data);
   }
 }

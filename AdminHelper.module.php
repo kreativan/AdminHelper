@@ -12,8 +12,8 @@ class AdminHelper extends WireData implements Module {
     return array(
       'title' => 'Admin Helper',
       'version' => 100,
-      'summary' => 'Helper to handle custom processwire admin ui',
-      'icon' => 'code-fork',
+      'summary' => 'Helper to handle custom processwire system and admin ui',
+      'icon' => 'connectdevelop',
       'author' => "Ivan Milincic",
       "href" => "https://kreativan.dev",
       'singular' => true,
@@ -31,11 +31,21 @@ class AdminHelper extends WireData implements Module {
 
   public function init() {
 
+    /**
+     * page-tree permission
+     * If there is no page tree permission, add it
+     */
+    if (!$this->permissions->has('page-tree')) {
+      $this->permissions->add('page-tree');
+    }
+
     /** Include hooks from folder */
     $this->autoloadFolder(__DIR__ . '/hooks/');
 
-    // assets suffix
-    $suffix = $this->config->debug ? '?v=' . time() : "?v=" . $this->js_files_suffix;
+    /** Include hooks from templates folder */
+    if ($this->hooks) {
+      $this->autoloadFolder($this->config->paths->templates . 'hooks/');
+    }
 
     /**
      * admin helper global variable
@@ -47,11 +57,25 @@ class AdminHelper extends WireData implements Module {
     $this->wire("helper", $this, true);
 
     /**
-     * system page global variable
+     * System page global variable
      * @var $system
      */
     $system_page = wire('pages')->get('template=system');
     if ($system_page != "") $this->wire("system", $system_page, true);
+
+    /**
+     * Api page global variable
+     * @var $api
+     */
+    $api_page = wire('pages')->get('template=api');
+    if ($api_page != "") $this->wire("api", $api_page, true);
+
+    /**
+     * HTMX page global variable
+     * @var $htmx
+     */
+    $htmx_page = wire('pages')->get('template=htmx');
+    if ($htmx_page != "") $this->wire("htmx", $htmx_page, true);
 
     /**
      * Runs only in Admin
@@ -66,12 +90,6 @@ class AdminHelper extends WireData implements Module {
         'debug' => $this->config->debug,
       ]);
 
-      /**
-       * run hide pages hook
-       * hide pages from page tree
-       */
-      $this->addHookAfter('ProcessPageList::execute', $this, 'hidePages');
-
       // Always set system page to the bottom of the page tree
       $system_page = $this->pages->get("template=system");
       if ($system_page != "" && $system_page->sort < 49) {
@@ -84,20 +102,27 @@ class AdminHelper extends WireData implements Module {
         $search_page->setAndSave("sort", 48);
       }
 
-      // load assets
+      /**
+       * Load Assets
+       * use $this->config->scripts->append() to add more scripts
+       * use $suffix for cache busting
+       */
+      $suffix = $this->debug ? time() : '';
       $this->config->scripts->append($this->url() . "assets/js/drag-drop-sort.js");
       $this->config->scripts->append($this->url() . "assets/js/AdminHelper.js");
       if ($this->load_htmx) {
-        $this->config->scripts->append($this->url() . "assets/js/htmx.js");
+        $this->config->scripts->append($this->url() . "lib/htmx-1.9.7/htmx.min.js");
+      }
+      if ($this->load_chartjs == 1) {
+        $this->config->scripts->append($this->url() . "lib/js/chart.js");
+        $this->config->scripts->append($this->url() . "lib/js/charts-init.js{$suffix}");
       }
 
-      // Load js files specified in module settings
-      if (!empty($this->js_files)) {
-        $js_files = explode("\n", $this->js_files);
-        foreach ($js_files as $js) {
-          $this->config->scripts->append($js . $suffix);
-        }
-      }
+      /**
+       * Watch for actions requests
+       * include action file based on the action $_GET variable
+       */
+      $this->autoloadActions('admin_action', $this);
 
       /**
        * Watch and handle drag and drop request
@@ -118,9 +143,6 @@ class AdminHelper extends WireData implements Module {
 
   public function ready() {
 
-    // assets suffix
-    $suffix = $this->config->debug ? '?v=' . time() : "?v=" . $this->js_files_suffix;
-
     /**
      * AdminTheme Config
      */
@@ -135,6 +157,45 @@ class AdminHelper extends WireData implements Module {
         $this->config->paths->templates . "admin.less",
       ],
     ];
+
+    /**
+     * App mode
+     */
+    if ($this->app_mode) {
+
+      // When users login redirect to it's admin dashboard
+      if ($this->input->get->login == "1" && (!$this->hasPageTree() || $this->dashboard_redirect)) {
+        $url = $this->dashboardURL();
+        $this->session->redirect($url);
+      }
+
+      /**
+       * Redirect to login in app mode
+       */
+      if ($this->forceLogin()) {
+        $this->session->redirect($this->loginURL());
+        exit();
+      }
+    }
+
+
+    /** 
+     * auto-include all functions from the templates/functions folder 
+     */
+    if ($this->functions) {
+      $this->autoloadFolder($this->config->paths->templates . 'functions/');
+    }
+
+    /**
+     * Include controllers based on a page template name
+     * @example /site/templates/controllers/basic-page.php
+     */
+    if ($this->controllers) {
+      $controller = $this->config->paths->templates . "controllers/{$this->page->template}.php";
+      if (file_exists($controller)) {
+        include_once($controller);
+      }
+    }
 
     /**
      * Add custom page events
@@ -158,18 +219,15 @@ class AdminHelper extends WireData implements Module {
     if ($this->isAdminPage()) {
 
       /**
-       * Watch for actions requests
-       * include action file based on the action $_GET variable
-       */
-      $this->autoloadActions('action', $this);
-
-      /**
        * Watch for HTMX request 
        * @see HTMX::watch()
        */
       if ($this->load_htmx) {
         $this->htmx()->watch();
       }
+
+      // assets suffix
+      $suffix = $this->config->debug ? '?v=' . time() : "?v=" . $this->js_files_suffix;
 
       // Load assets for pageEditModal
       if ($this->input->get->modal && $this->page->name == "edit" && $this->input->get->context != 'PageTable') {
@@ -195,15 +253,6 @@ class AdminHelper extends WireData implements Module {
     return $this->config->urls->siteModules . $this->className() . "/";
   }
 
-  // Check if current page is admin page
-  public function isAdminPage() {
-    if (strpos($_SERVER['REQUEST_URI'], $this->wire('config')->urls->admin) === 0) {
-      return true;
-    } else {
-      return false;
-    }
-  }
-
   /** Get current language code */
   public function lang() {
     $lng = ($this->user->language && $this->user->language->name != "default") ? $this->user->language->name : setting('default_lang');
@@ -211,25 +260,29 @@ class AdminHelper extends WireData implements Module {
   }
 
   /**
-   * Encode json
-   * ready to be used in HTML attributes
-   * @param array $data
-   */
-  public function json_encode($data) {
-    return htmlspecialchars(json_encode($data), ENT_QUOTES, 'UTF-8');
-  }
-
-  /**
    * Include files based on a $_GET variable
    * from module /actions/ folder
    * To reference module in included file use $module instead of $this
+   * @example $this->autoloadActions('my_module_action', 'MyModuleClassName');
    * @param string $GET - name of the $_GET variable
    */
   public function autoloadActions($GET, $module) {
     $action = $this->sanitizer->text($this->input->get->{$GET});
+    $module = is_string($module) ? $this->modules->get($module) : $module;
     $file = $this->config->paths->siteModules . $module->className() . "/actions/{$action}.php";
     if (file_exists($file)) {
-      include_once($file);
+      $this->files->include($file, [
+        'module' => $module,
+        'action' => $action,
+      ]);
+    } else if ($action != "" && ($this->input->get->admin_helper_ajax || $this->input->post->admin_helper_ajax)) {
+      $this->json_response([
+        'status' => 'error',
+        'notification' => "<i class='fa fa-exclamation-triangle uk-margin-small-right'></i> <b>$action</b> action file not found",
+        'REQ' => $_REQUEST
+      ]);
+    } else if ($action != "") {
+      $this->error("$action action file not found");
     }
   }
 
@@ -243,20 +296,195 @@ class AdminHelper extends WireData implements Module {
     foreach ($files as $file) include($file);
   }
 
+  // --------------------------------------------------------- 
+  // ACL - Access Control - App Mode
+  // --------------------------------------------------------- 
+
+  // Check if current page is admin page
+  public function isAdminPage() {
+    if (strpos($_SERVER['REQUEST_URI'], $this->wire('config')->urls->admin) === 0) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  public function isLoginPage() {
+    if ($this->input->urlSegment1 == "login") return true;
+    // check if current url is login url
+    if (strpos($_SERVER['REQUEST_URI'], $this->loginURL()) === 0) return true;
+    return false;
+  }
+
+  public function dashboardURL() {
+    $dashboard_url = !empty($this->dashboard_url) ? $this->dashboard_url : 'dashboard/';
+    return $this->config->urls->admin . $dashboard_url;
+  }
+
+  public function loginURL() {
+    $login = $this->pages->get("template=login");
+    if ($login != "") return $login->url;
+    return $this->pages->get('/')->url . "login/";
+  }
+
+  public function forceLogin() {
+    // if force login is disabled, false
+    if (!$this->force_login) return false;
+    // if it is login page, false
+    if ($this->isLoginPage()) return false;
+    // if page template is public, false
+    if ($this->page && in_array($this->page->template->id, $this->public_templates)) {
+      return false;
+    }
+    // when user is not loggedin
+    if (!$this->user->isLoggedin()) return true;
+    // When logging out from admin
+    if ($this->input->get->loggedout == "1") return true;
+    return false;
+  }
+
+  public function hasPageTree() {
+
+    // If app_mode is disabled, return true
+    if (!$this->app_mode) return true;
+
+    // Everyone
+    if ($this->page_tree_access == "1") return true;
+
+    // Superuser Admin
+    if ($this->page_tree_access == "2") {
+      return $this->user->name == "admin" ? true : false;
+    }
+
+    // All Superusers
+    if ($this->page_tree_access == "3") {
+      return $this->user->isSuperuser() ? true :  false;
+    }
+
+    // Page Tree Permission
+    if ($this->page_tree_access == "4") {
+      return $this->user->hasPermission('page-tree') ? true : false;
+    }
+
+    return true;
+  }
+
+  // --------------------------------------------------------- 
+  // JSON 
+  // --------------------------------------------------------- 
+
+  /**
+   * Encode json
+   * ready to be used in HTML attributes
+   * @param array $data
+   */
+  public function json_encode($data) {
+    return htmlspecialchars(json_encode($data), ENT_QUOTES, 'UTF-8');
+  }
+
+  /**
+   * Set JSON header
+   * and echo json data
+   */
+  public function jsonResponse($response) {
+    header('Content-type: application/json');
+    echo json_encode($response);
+    exit();
+  }
+
+  /**
+   * Set JSON header
+   * and echo json data
+   * same as jsonResponse()
+   */
+  public function json_response($response) {
+    header('Content-type: application/json');
+    echo json_encode($response);
+    exit();
+  }
+
+  /**
+   * Get json file from the lib and decode it
+   * @param string $file_name
+   * @return array
+   */
+  public function get_json_lib($file_name) {
+    $file = $this->lib_path() . "json/$file_name.json";
+    if (file_exists($file)) {
+      $json = file_get_contents($file);
+      return json_decode($json, true);
+    }
+    return [];
+  }
+
   // ========================================================= 
   // Classes 
   // ========================================================= 
 
-  public function utility() {
-    require_once(__DIR__ . '/classes/Utility.php');
-    $utility = new AdminHelper_Utility();
-    return $utility;
-  }
-
   public function htmx() {
     require_once(__DIR__ . '/classes/HTMX.php');
-    $htmx = new AdminHelper_HTMX();
-    return $htmx;
+    $obj = new \AdminHelper\HTMX();
+    return $obj;
+  }
+
+  public function Utility() {
+    require_once(__DIR__ . '/classes/Utility.php');
+    $obj = new \AdminHelper\Utility();
+    return $obj;
+  }
+
+  public function Markup() {
+    require_once(__DIR__ . '/classes/Markup.php');
+    $obj = new \AdminHelper\Markup();
+    return $obj;
+  }
+
+  public function Request() {
+    require_once(__DIR__ . '/classes/Request.php');
+    $obj = new \AdminHelper\Request();
+    return $obj;
+  }
+
+  public function Valitron() {
+    require_once(__DIR__ . '/classes/Valitron.php');
+    $obj = new \AdminHelper\Valitron();
+    return $obj;
+  }
+
+  public function Auth() {
+    require_once(__DIR__ . '/classes/Auth.php');
+    $obj = new \AdminHelper\Auth();
+    return $obj;
+  }
+
+  public function CSV() {
+    require_once(__DIR__ . '/classes/CSV.php');
+    $obj = new \AdminHelper\CSV();
+    return $obj;
+  }
+
+  public function Fields() {
+    require_once(__DIR__ . '/classes/Fields.php');
+    $obj = new \AdminHelper\Fields();
+    return $obj;
+  }
+
+  public function ApiEndPoint() {
+    require_once(__DIR__ . '/classes/ApiEndPoint.php');
+    $obj = new \AdminHelper\ApiEndPoint();
+    return $obj;
+  }
+
+  public function HtmxEndPoint() {
+    require_once(__DIR__ . '/classes/HtmxEndPoint.php');
+    $obj = new \AdminHelper\HtmxEndPoint();
+    return $obj;
+  }
+
+  public function Emails() {
+    require_once(__DIR__ . '/classes/Emails.php');
+    $obj = new \AdminHelper\Emails();
+    return $obj;
   }
 
   // ========================================================= 
@@ -344,7 +572,7 @@ class AdminHelper extends WireData implements Module {
   }
 
   //-------------------------------------------------------- 
-  //  Admin Actions
+  //  Admin Actions & UI
   //-------------------------------------------------------- 
 
   /**
@@ -362,95 +590,62 @@ class AdminHelper extends WireData implements Module {
     }
   }
 
-  /**
-   *  Intercept page tree json and remove page from it
-   *  We will remove page by its template
-   */
-  public function hidePages(HookEvent $event) {
-
-    if ($this->user->isSuperuser() && $this->hide_for == "2") return;
-
-    // get system pages
-    $sysPagesArr = $this->sys_pages;
-
-    // aditional pages to hide by ID
-    $customArr = [];
-    if ($this->hide_system_pages == "1") {
-      $customArr[] = "2"; // admin
-      $customArr[] = $this->pages->get("template=system");
-    }
-
-    if ($this->config->ajax) {
-
-      // manipulate the json returned and remove any pages found from array
-      $json = json_decode($event->return, true);
-      if ($json && isset($json['children'])) {
-        foreach ($json['children'] as $key => $child) {
-          $c = $this->pages->get($child['id']);
-          $pagetemplate = $c->template;
-          if (in_array($pagetemplate, $sysPagesArr) || in_array($c, $customArr)) {
-            unset($json['children'][$key]);
-          }
-        }
-        $json['children'] = array_values($json['children']);
-        $event->return = json_encode($json);
-      }
-    }
+  public function render($file_path, $vars = []) {
+    $file_path = str_replace(".php", "", $file_path);
+    $file = $this->path() . $file_path . ".php";
+    $this->files->include($file, $vars);
   }
 
-  // ========================================================= 
-  // Admin UI - Admin Table
-  // ========================================================= 
+  public function renderMarkup($file_path, $vars = []) {
+    $file_path = str_replace(".php", "", $file_path);
+    $file = $this->path() . "markup/" . $file_path . ".php";
+    $file = $this->config->paths->templates . $file;
+    $this->files->include($file, $vars);
+  }
 
   /**
-   * Render Admin Table
+   * Run uikit notification
    * @param array $params
-   * @param $params['selector'] - selector string to find the pages to display eg: "templat=my-template"
-   * @param $params['table_fields'] - array of fields to display in the table eg: ["Template" => "template.name", "ID" => "id"]
-   * @param $params['table_actions'] - show table actions
-   * @example $AdminHelper->adminTable($params);
+   * @example $AdminHelper->notification($params);
+   * @example $AdminHelper->notification(['message' => "Success", 'status' => "success"]);
    */
-  public function adminTable($params = []) {
-    $selector = $params['selector'] ?? "";
-    $table_fields = $params['table_fields'] ?? [];
-    $table_actions = $params['table_actions'] ?? true;
-    $this->files->include(__DIR__ . "/tmpl/admin-table.php", [
-      "selector" => $selector,
-      "table_fields" => $table_fields,
-      "table_actions" => $table_actions,
-    ]);
+  public function notification($params) {
+    $icon = !empty($params['icon']) ? $params['icon'] : '';
+    $message = !empty($params['message']) ? $params['message'] : '';
+    $status = !empty($params['status']) ? $params['status'] : 'primary';
+    $pos = !empty($params['pos']) ? $params['pos'] : 'top-center';
+    $timeout = !empty($params['timeout']) ? $params['timeout'] : 3000;
+    $html = "
+      <script>
+        UIkit.notification({
+          message: '<i class=\"fa fa-{$icon} fa-lg uk-margin-small-right\"></i> {$message}',
+          status: '{$status}',
+          pos: '{$pos}',
+          timeout: '{$timeout}'
+        });
+      </script>
+    ";
+    $this->adminTheme->addExtraMarkup("content", $html);
   }
 
   /**
-   * Render Admin Table
-   * powered by htmx
+   * Send email
    * @param array $params
-   * @param $params['selector'] - selector string to find the pages to display eg: "templat=my-template"
-   * @param $params['table_fields'] - array of fields to display in the table eg: ["Template" => "template.name", "ID" => "id"]
-   * @param $params['close_modal'] - close modal after page edit
-   * @param $params['table_actions'] - show table actions
-   * @param $paramsp['icon'] - icon to display in the table
-   * @example $AdminHelper->adminTableHtmx($params);
+   * @param string $params['to'] - email address to send to (required)
+   * @param string $params['from'] - email address to send from (required)
+   * @param string $params['fromName'] - email name to send from (optional)
+   * @param string $params['replyTo'] - email address to reply to (optional)
+   * @param string $params['subject'] - email subject (required)
+   * @param string $params['body'] - email body (required)
+   * @param string $params['attachment'] - path to attachment file (optional)
+   * @param array $params['attachments'] - array of paths to attachment files (optional)
+   * @param string $params['email_template'] - path to email template file, will be used instead of body (optional)
+   * @param string $params['email_template_page'] - page id to get email body from (optional)
+   * @param array $params['data'] - data array to replace {text} in a provided string (optional)
+   * @param int $params['related_page'] - page id to get page fields (optional)
+   * @return void
    */
-  public function adminTableHtmx($params = []) {
-    $this->files->include(__DIR__ . "/tmpl/admin-table-htmx.php", $params);
-  }
-
-  /**
-   * Render Admin Tabs
-   * @param array $tabs - ['tab_name_1' => [], 'tab_name_2' => []]
-   * @param string $active_var - $_GET variable to set active tab
-   * 
-   * @example $AdminHelper->adminTabs($tabs, 'taxonomy');
-   * In this example tab will be active if ($input->get->taxonomy == 'tab_name')
-   * 
-   * Tabs array items:
-   * @var string $tab['title']
-   * @var string $tab['url'] - "./?taxonomy=tab_name"
-   * @var string $tab['icon']
-   * @var bool $tab['visible']
-   */
-  public function adminTabs($tabs, $active_var = "tab") {
-    $this->files->include(__DIR__ . "/tmpl/admin-tabs.php", ['tabs' => $tabs, 'active_var' => $active_var]);
+  public function send_email($params) {
+    $this->Emails()->sendEmail($params);
   }
 }

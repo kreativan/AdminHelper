@@ -2,7 +2,9 @@
 
 /** 
  * Actions: publish-ajax
- * @var $module
+ * @var object $module - module used to handle this action
+ * @var string $action - action name
+ * @var int $_GET['id'] - page id
  */
 
 namespace ProcessWire;

@@ -2,7 +2,8 @@
 
 /** 
  * Actions: test
- * @var $module
+ * @var object $module - module used to handle this action
+ * @var string $action - action name
  */
 
 namespace ProcessWire;

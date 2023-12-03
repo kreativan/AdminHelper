@@ -1,6 +1,10 @@
 <?php
 
-class AdminHelper_Utility extends WireData {
+namespace AdminHelper;
+
+use ProcessWire\WireData;
+
+class Utility extends WireData {
 
   public function __construct() {
   }
@@ -26,6 +30,25 @@ class AdminHelper_Utility extends WireData {
   }
 
   /**
+   * Replace {text} in a provided string 
+   * with the key from a $data array
+   * @param string $string eg: "Welcome to {title}"
+   * @param array $data eg: ['title' => 'My Website']
+   * @return string
+   */
+  public function strReplace($string, $data) {
+    $regex = preg_match_all('#\{(.*?)\}#', $string, $matches);
+    $arr = $matches[0];
+    foreach ($arr as $item) {
+      $key = str_replace("{", "", $item);
+      $key = str_replace("}", "", $key);
+      $replace = !empty($data[$key]) ? $data[$key] : "";
+      $string = str_replace($item, $replace, $string);
+    }
+    return $string;
+  }
+
+  /**
    *  Format page strings
    *  extract page variables
    *  @param string $string  eg: {title} or {select_page.url}
@@ -46,10 +69,9 @@ class AdminHelper_Utility extends WireData {
       $sl1 = $str[0];
       $sl2 = isset($str[1]) ? $str[1] : "";
       $selector = !empty($sl2) ? $page->{$sl1}->{$sl2} : $page->{$sl1};
-      $string = str_replace($item, $selector, $string);
+      $replace = !empty($selector) ? $selector : "";
+      $string = str_replace($item, $replace, $string);
     }
-    $string = strip_tags($string);
-    $string = wire("sanitizer")->removeNewlines($string);
     return $string;
   }
 
@@ -86,73 +108,37 @@ class AdminHelper_Utility extends WireData {
     return htmlspecialchars(json_encode($data), ENT_QUOTES, 'UTF-8');
   }
 
-  // ========================================================= 
-  // Validation 
-  // ========================================================= 
-
-  public function validatePOST($params = [], $lang = '') {
-    return $this->get_req_errors($params, $lang);
-  }
+  //-------------------------------------------------
+  // Numbers
+  //-------------------------------------------------
 
   /**
-   * Validate POST data using $this->valitron() method
-   * @param array $params
-   * @param string $lang
-   * @return array|bool false if POST is valid - array of errors if not
-   * 
-   * @example
-   * $errors = $this->get_req_errors([
-   *  'labels' => ['name' => 'Your Name', 'email' => 'Your Email'],
-   *  'required' => ['name', 'email'],
-   *  'email' => ['email' ],
-   *  'integer' => ['age', 'days'],
-   * ], 'en');
-   * if (!$errors) // is valid
+   * Check if number is even or odd
    */
-  public function get_req_errors($params = [], $lang = '') {
-
-    $labels = !empty($params['labels']) ? $params['labels'] : [];
-    $required = !empty($params['required']) ? $params['required'] : []; // field names
-
-    // exclude from rules
-    $exc = ['labels', 'required'];
-
-    $v = $this->valitron($_REQUEST, $lang);
-    $v->labels($labels);
-    $v->rule('required', $required);
-
-    // add all params except excluded as rules
-    foreach ($params as $key => $array) {
-      if (!in_array($key, $exc)) {
-        $v->rule($key, $array);
-      }
-    }
-
-    if (!$v->validate()) {
-      return $v->errors();
+  public function even_odd($number) {
+    if ($number % 2 == 0) {
+      return "even";
     } else {
-      return false;
+      return "odd";
     }
   }
 
   /**
-   * Init valitron validation library
-   * @see $this->validatePOST() for usage
+   * Format price
+   * @param float $price
+   * @param string $currency - defines decimal and thousands separator
+   * @return float
    */
-  public function valitron($array, $lang = '') {
-    require($this->path() . "lib/valitron/src/Valitron/Validator.php");
-
-    // Set global language
-    if ($lang != '') {
-      \Valitron\Validator::lang($lang);
-    } else {
-      \Valitron\Validator::lang($this->adminHelper->lang());
+  public function format_price(float $price, string $currency = "EUR") {
+    switch ($currency) {
+      case "EUR":
+        $decimal_separator = ".";
+        $thousands_separator = ",";
+        break;
+      default:
+        $decimal_separator = ",";
+        $thousands_separator = ".";
     }
-
-    // create valitron instance
-    $v = new \Valitron\Validator($array);
-
-    // return valitron instance
-    return $v;
+    return number_format((float) $price, 2, $thousands_separator, $decimal_separator);
   }
 }

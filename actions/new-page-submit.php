@@ -2,8 +2,10 @@
 
 /**
  * Actions: new-page-ajax
- * method: POST
- * @var $module
+ * @var object $module - module used to handle this action
+ * @var string $action - action name
+ * @var int $_POST['parent_id'] - parent page id
+ * @var int $_POST['template_id'] - template id
  */
 
 namespace ProcessWire;

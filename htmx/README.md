@@ -1,0 +1,1 @@
+You can fetch fiels from here using `/get-htmx/{file_name}/` route
