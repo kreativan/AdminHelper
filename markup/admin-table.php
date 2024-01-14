@@ -8,79 +8,44 @@
 namespace ProcessWire;
 
 // Selector to find the pages
-$selector = !empty($selector) ? $selector : "";
-// get current paginated page
-$selector .= $input->pageNum > 1 ? ", start=$input->pageNum" : "";
-// find
-$selector = $input->get->selector ? $sanitizer->text($input->get->selector) : $selector;
-
+$selector = isset($selector) ? $selector : "";
+$selector = $helper->prop('selector', $selector, "text");
+// Get current page number
+$pageNum = !empty($_REQUEST['pageNum']) ? (int) $_REQUEST['pageNum'] : $input->pageNum;
+// Set Page Number for HTMX req
+if (!empty($_REQUEST['pageNum']) && $pageNum > 1) $input->setPageNum($pageNum);
 // Find items
 $items = $pages->find($selector);
 
-// Table fields to display
-$table_fields = !empty($table_fields) ? $table_fields : [];
-$table_fields = $input->get->table_fields ? $sanitizer->text($input->get->table_fields) : $table_fields;
-
-// Page References table field
-$references = !empty($references) ? $references : "";
-$references = $input->get->references ? $sanitizer->text($input->get->references) : $references;
-$references = $references == "true" ? true : false;
-
-// Close modal after page edit
-$close_modal = !empty($close_modal) ? $close_modal : "";
-$close_modal = $input->get->close_modal ? $sanitizer->text($input->get->close_modal) : $close_modal;
-$close_modal = $close_modal == "true" ? "true" : "false";
-
-// Hide tabs on modal page edit
-$remove_tabs = !empty($remove_tabs) ? $remove_tabs : "";
-$remove_tabs = $input->get->remove_tabs ? $sanitizer->text($input->get->remove_tabs) : $remove_tabs;
-$remove_tabs = $remove_tabs == "true" ? "true" : "false";
-
-// remove delete tab on modal page edit
-$delete_tab = !empty($delete_tab) ? $delete_tab : "";
-$delete_tab = $input->get->delete_tab ? $sanitizer->text($input->get->delete_tab) : $delete_tab;
-$delete_tab = $delete_tab == "false" ? "false" : "true";
-
-// remove delete tab if page has references
-$delete_tab_ref = !empty($delete_tab_ref) ? $delete_tab_ref : "";
-$delete_tab_ref = $input->get->delete_tab_ref ? $sanitizer->text($input->get->delete_tab_ref) : $delete_tab_ref;
-$delete_tab_ref = $delete_tab_ref == "true" ? "true" : "false";
-
-// remove settings tab on modal page edit
-$settings_tab = !empty($settings_tab) ? $settings_tab : "";
-$settings_tab = $input->get->settings_tab ? $sanitizer->text($input->get->settings_tab) : $settings_tab;
-$settings_tab = $settings_tab == "false" ? "false" : "true";
-
-// Show table actions publish-unpublish, trash
-$table_actions = !empty($table_actions) ? $table_actions : "true";
-$table_actions = $input->get->table_actions ? $sanitizer->text($input->get->table_actions) : $table_actions;
-$table_actions = $table_actions == "true" ? true : false;
-
-// Dropdown file path
-$dropdown_file = !empty($dropdown_file) ? $dropdown_file : "";
-$dropdown_file = $input->get->dropdown_file ? $sanitizer->text($input->get->dropdown_file) : $dropdown_file;
-
-// Htmx data to pass to the table.php when loaded via htmx
-$htmx_data = [
+// Set properties and variables
+$props = $helper->props([
   'selector' => $selector,
-  'table_fields' => $table_fields,
-  'references' => $references,
-  'close_modal' => $close_modal,
-  'remove_tabs' => $remove_tabs,
-  'delete_tab' => $delete_tab,
-  'delete_tab_ref' => $delete_tab_ref,
-  'settings_tab' => $settings_tab,
-  'table_actions' => $table_actions,
-  'dropdown_file' => $dropdown_file,
-];
+  'pageNum' => $pageNum,
+  'table_fields' => !empty($table_fields) ? $table_fields : [],
+  'title' => isset($title) ? $title : 1,
+  'references' => isset($references) ? $references : "",
+  'close_modal' => isset($close_modal) ? $close_modal : 1,
+  'remove_tabs' => isset($remove_tabs) ? $remove_tabs : 1,
+  'delete_tab' => isset($delete_tab) ? $delete_tab : 1,
+  'delete_tab_ref' => isset($delete_tab_ref) ? $delete_tab_ref : 0,
+  'settings_tab' => isset($settings_tab) ? $settings_tab : 1,
+  'table_actions' => isset($table_actions) ? $table_actions : 0,
+  'dropdown_file' => isset($dropdown_file) ? $dropdown_file : "",
+  'table_count' => isset($table_count) ? $table_count : 0,
+  'table_class' => isset($table_class) ? $table_class : "uk-table-striped",
+]);
+
+// Reassign props as variables so we can use them as: echo $key;
+foreach ($props as $key => $val) $$key = $val;
 
 // Convert table_fields to array if it is json
 $table_fields = is_array($table_fields) ? $table_fields : json_decode($table_fields, true);
+
 ?>
 
-<div id="admin-table-htmx" data-htmx="<?= __DIR__ . "/admin-table.php" ?>" data-vals='<?= $AdminHelper->json_encode($htmx_data) ?>' data-close-modal="<?= $close_modal ?>" class="uk-overflow-auto">
+<div id="admin-table-htmx" data-htmx="<?= __DIR__ . "/admin-table.php" ?>" data-vals='<?= $AdminHelper->json_encode($props) ?>' data-close-modal="<?= $close_modal ?>" class="uk-overflow-auto">
 
-  <table class="AdminDataTableSortable uk-table uk-table-striped uk-table-middle uk-table-small uk-margin-remove">
+  <table class="AdminDataTableSortable uk-margin-remove uk-table uk-table-middle uk-table-small uk-margin-remove <?= $table_class ?>">
 
     <thead>
       <tr>
@@ -88,7 +53,13 @@ $table_fields = is_array($table_fields) ? $table_fields : json_decode($table_fie
           <th class="uk-table-shrink"></th>
         <?php endif; ?>
 
-        <th><?= __('Title') ?></th>
+        <?php if ($table_count) : ?>
+          <th class="uk-table-shrink"></th>
+        <?php endif; ?>
+
+        <?php if ($title) : ?>
+          <th><?= __('Item') ?></th>
+        <?php endif; ?>
 
         <?php foreach ($table_fields as $key => $value) : ?>
           <th><?= $key ?></th>
@@ -140,15 +111,25 @@ $table_fields = is_array($table_fields) ? $table_fields : json_decode($table_fie
               </td>
             <?php endif; ?>
 
-            <td>
-              <?php if (method_exists($item, 'admin_table_title')) : ?>
-                <?= $item->admin_table_title() ?>
-              <?php else : ?>
-                <a href="#" <?= $AdminHelper->htmx()->pageEditModal($item->id, $modal_options) ?>>
-                  <?= $item->title ?>
-                </a>
-              <?php endif; ?>
-            </td>
+            <?php if ($table_count) : ?>
+              <td class="uk-table-shrink uk-text-center uk-text-small">
+                <?= $i++ ?>.
+              </td>
+            <?php endif; ?>
+
+            <?php if ($title) : ?>
+              <td class="uk-link-heading">
+                <?php if (method_exists($item, 'admin_table_title')) : ?>
+                  <a href="#" <?= $AdminHelper->htmx()->pageEditModal($item->id, $modal_options) ?>>
+                    <?= $item->admin_table_title() ?>
+                  </a>
+                <?php else : ?>
+                  <a href="#" <?= $AdminHelper->htmx()->pageEditModal($item->id, $modal_options) ?>>
+                    <?= $item->title ?>
+                  </a>
+                <?php endif; ?>
+              </td>
+            <?php endif; ?>
 
             <?php if (!empty($label)) : ?>
               <td>

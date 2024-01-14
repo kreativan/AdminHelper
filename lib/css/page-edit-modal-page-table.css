@@ -1,7 +1,0 @@
-.InputfieldPageTable,
-#wrap_Inputfield__pw_page_name,
-#wrap_Inputfield_status li:not(:nth-child(1)):not(:nth-child(2)),
-#ProcessPageEditReferences,
-#ProcessPageEditRoles {
-	display: none;
-}

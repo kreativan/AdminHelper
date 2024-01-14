@@ -5,14 +5,20 @@
  * 
  *  api-auth page fields: 
  *  - api_key
+ *  - ip
+ *  - website 
  * 
- * apache needs to be configured to pass the authorization header
+ * Apache needs to be configured to pass the authorization header
  * in .htaccess add:
  * RewriteEngine On
  * RewriteCond %{HTTP:Authorization} ^(.*)
  * RewriteRule .* - [e=HTTP_AUTHORIZATION:%1]
  * 
  * Api key should be provided in the authorization header
+ * 
+ * SERVER IP NOTE: 
+ * Be careful with the IP auth. If the IP is the same as the server ip of the app, direct access will be allowed true the browser.
+ * If you want to send request from the same server as the app, use referrer or api_key to authenticate.
  * 
  */
 
@@ -33,6 +39,8 @@ class Auth extends WireData {
     header("Access-Control-Allow-Origin: *");  // Replace * with your actual domain for better security
     header("Access-Control-Allow-Methods: POST, GET");
     header("Access-Control-Allow-Headers: Content-Type, Authorization");
+    // allow iframes
+    header("Content-Security-Policy: frame-ancestors *");
   }
 
   /**
@@ -83,12 +91,25 @@ class Auth extends WireData {
 
   /**
    * Get api auth page
-   * based on request data: ip, public_ip and referer
+   * based on request data: api_key, server_ip, referer
    * @param array $req - request data
    */
   public function apiAuthPage($req) {
+    // api-key
     $api_key = $req['api_key'];
-    $selector = "template=api-auth, api_key=$api_key, api_key!=''";
-    return $this->pages->get($selector);
+    $api_key_page = $this->pages->findOne("template=api-auth, api_key=$api_key, api_key!='");
+    if ($api_key_page != '') return $api_key_page;
+
+    // server-ip
+    $server_ip = $req['server_ip'];
+    $server_ip_page = $this->pages->findOne("template=api-auth, ip=$server_ip, ip!=''");
+    if ($server_ip_page != '') return $server_ip_page;
+
+    // referer
+    $referer = $req['referer'];
+    $referer_page = $this->pages->findOne("template=api-auth, website=$referer, website!=''");
+    if ($referer_page != '') return $referer_page;
+
+    return "";
   }
 }

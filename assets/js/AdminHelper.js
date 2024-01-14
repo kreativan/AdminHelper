@@ -582,7 +582,7 @@ const adminHelper = (function () {
 
         let id = e.getAttribute('id');
         let closeModal = e.getAttribute('data-close-modal');
-        let toCloseModal = forceModalClose || (closeModal && closeModal === 'true') ? true : false;
+        let toCloseModal = forceModalClose || (closeModal && (closeModal === 'true' || closeModal == 1)) ? true : false;
 
         if (!toCloseModal) {
           let pageEditModalIndicator = parent.document.querySelector('.page-edit-modal-indicator');

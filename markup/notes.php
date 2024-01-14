@@ -63,7 +63,7 @@ $items = $pages->find($selector);
 
   <div class="uk-position-top-right uk-position-small">
     <?php
-    $AdminHelper->Markup()->render('pagination-htmx-next-prev', [
+    $AdminHelper->render('markup/pagination-htmx-next-prev', [
       'items' => $items,
       'limit' => 3,
       'htmx_file' => __DIR__ . '/notes.php',

@@ -57,13 +57,6 @@ class AdminHelper extends WireData implements Module {
     $this->wire("helper", $this, true);
 
     /**
-     * System page global variable
-     * @var $system
-     */
-    $system_page = wire('pages')->get('template=system');
-    if ($system_page != "") $this->wire("system", $system_page, true);
-
-    /**
      * Api page global variable
      * @var $api
      */
@@ -89,12 +82,6 @@ class AdminHelper extends WireData implements Module {
       $this->config->js('AdminHelper', [
         'debug' => $this->config->debug,
       ]);
-
-      // Always set system page to the bottom of the page tree
-      $system_page = $this->pages->get("template=system");
-      if ($system_page != "" && $system_page->sort < 49) {
-        $system_page->setAndSave("sort", 49);
-      }
 
       // Always set search page to the bottom of the page tree
       $search_page = $this->pages->get("template=search");
@@ -205,7 +192,9 @@ class AdminHelper extends WireData implements Module {
     if ($this->isAdminPage()) {
       if (($this->page->name === "edit" || $this->page->urlSegment === "edit") && $this->input->get->id) {
         $p = $this->pages->get($this->input->get->id);
-        if (method_exists($p, 'onPageEdit')) $p->onPageEdit();
+        if (method_exists($p, 'onPageEdit')) {
+          $p->onPageEdit();
+        }
       }
     } else {
       // Run page init method if exists on page visit
@@ -229,7 +218,9 @@ class AdminHelper extends WireData implements Module {
       // assets suffix
       $suffix = $this->config->debug ? '?v=' . time() : "?v=" . $this->js_files_suffix;
 
-      // Load assets for pageEditModal
+      /**
+       * Load assets for pageEditModal
+       */
       if ($this->input->get->modal && $this->page->name == "edit" && $this->input->get->context != 'PageTable') {
         $this->config->tracyDisabled = true;
         $this->config->styles->append($this->url() . "assets/css/page-edit-modal.css{$suffix}");
@@ -257,6 +248,48 @@ class AdminHelper extends WireData implements Module {
   public function lang() {
     $lng = ($this->user->language && $this->user->language->name != "default") ? $this->user->language->name : setting('default_lang');
     return $lng;
+  }
+
+  /**
+   * Pass variables (props) to the included file. @see prop();
+   * 
+   * Works good for passing dynamic data for htmx.
+   * You can json encode the $props and pass it via hx-vals
+   * @example hx-vals='<?= json_encode($props) ?>'
+   * 
+   * @example $props = props(['key' => 'value']);
+   * @example echo $props['key'];
+   * 
+   * Or you can also then re-assign each key as it own variable:
+   * @example foreach ($props as $key => $val) $$key = $val;
+   * @example echo $key;
+   */
+  function props($props = []) {
+    $data = [];
+    foreach ($props as $key => $value) {
+      $data[$key] = $this->prop($key, $value);
+    }
+    return $data;
+  }
+
+  /**
+   * Set prop for a component or included file.
+   * If u want to pass dynamic data to the file, eg: via htmx request.
+   * prop() will check if $_REQUEST[$name] is set, if not it will use $value,
+   * so you don't have to check for $input->get->name or $input->post->name
+   * @example
+   * $my_variable_value = "default value";
+   * $my_var = prop("my_variable", $my_variable_value, 'text');
+   * @param string $name - name of the variable
+   * @param string $value - default value, its usually a variable that we are passing to the file
+   * @param string $sanitizer - sanitizer name
+   */
+  public function prop($name, $value, $sanitizer = false) {
+    $variable = isset($_REQUEST[$name]) ? $_REQUEST[$name] : $value;
+    if ($variable === 1 || $variable == "true") return true;
+    if ($variable === 0 || $variable == "false") return false;
+    $variable = $sanitizer ? $this->sanitizer->{$sanitizer}($variable) : $variable;
+    return $variable;
   }
 
   /**
@@ -300,7 +333,9 @@ class AdminHelper extends WireData implements Module {
   // ACL - Access Control - App Mode
   // --------------------------------------------------------- 
 
-  // Check if current page is admin page
+  /**
+   * Check if current page is admin page
+   */
   public function isAdminPage() {
     if (strpos($_SERVER['REQUEST_URI'], $this->wire('config')->urls->admin) === 0) {
       return true;
@@ -309,6 +344,10 @@ class AdminHelper extends WireData implements Module {
     }
   }
 
+  /**
+   * Check if current page is login page
+   * based on urlSegment1 or $_SERVER['REQUEST_URI']
+   */
   public function isLoginPage() {
     if ($this->input->urlSegment1 == "login") return true;
     // check if current url is login url
@@ -316,17 +355,38 @@ class AdminHelper extends WireData implements Module {
     return false;
   }
 
+  /**
+   * Return dashboard url
+   * You can set custom dashboard url in module settings
+   * If not set, it will return default dashboard url (dashboard/)
+   * @return string
+   */
   public function dashboardURL() {
     $dashboard_url = !empty($this->dashboard_url) ? $this->dashboard_url : 'dashboard/';
     return $this->config->urls->admin . $dashboard_url;
   }
 
+  /**
+   * Return login url
+   * If there is a page with login template, it will be used as login page...
+   * ... and this method will return it's url.
+   * If not, it will return default login url (login/) ... 
+   * ... which is set via url hook in hooks/routing.php
+   */
   public function loginURL() {
     $login = $this->pages->get("template=login");
     if ($login != "") return $login->url;
     return $this->pages->get('/')->url . "login/";
   }
 
+  /**
+   * Should we force user to login?
+   * If force_login option is enabled in module settings.
+   * If user is not loggedin.
+   * If user is not on login page.
+   * If user is not on public page.
+   * @return bool
+   */
   public function forceLogin() {
     // if force login is disabled, false
     if (!$this->force_login) return false;
@@ -343,6 +403,14 @@ class AdminHelper extends WireData implements Module {
     return false;
   }
 
+  /**
+   * Check if user has access to page tree
+   * if app_mode is disabled, return true
+   * if page_tree_access is set to everyone, return true
+   * if page_tree_access is set to superuser admin, return true 
+   * if user has permission page-tree, return true
+   * @return bool
+   */
   public function hasPageTree() {
 
     // If app_mode is disabled, return true
@@ -430,12 +498,6 @@ class AdminHelper extends WireData implements Module {
   public function Utility() {
     require_once(__DIR__ . '/classes/Utility.php');
     $obj = new \AdminHelper\Utility();
-    return $obj;
-  }
-
-  public function Markup() {
-    require_once(__DIR__ . '/classes/Markup.php');
-    $obj = new \AdminHelper\Markup();
     return $obj;
   }
 

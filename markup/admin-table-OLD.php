@@ -3,89 +3,95 @@
 /**
  * Admin Table HTMX
  * @var string $selector - selector string to find the pages to display eg: "template=my-template"
- * @var string $table_fields - array of fields to display in the table eg: ["Template" => "template.name", "ID" => "id"]
- * @var string $close_modal - close modal after page edit
- * @var string $table_actions - show table actions publish-unpublish, trash
- * @var string $htmx_data - htmx data to pass to the table.php when loaded via htmx
  */
 
 namespace ProcessWire;
 
 // Selector to find the pages
-$selector = !empty($selector) ? $selector : "";
-$selector = $input->get->selector ? $sanitizer->text($input->get->selector) : $selector;
-
+$selector = isset($selector) ? $selector : "";
+$selector = $helper->prop('selector', $selector, "text");
+// Get current page number
+$pageNum = !empty($_REQUEST['pageNum']) ? (int) $_REQUEST['pageNum'] : $input->pageNum;
+// Set Page Number for HTMX req
+if (!empty($_REQUEST['pageNum']) && $pageNum > 1) $input->setPageNum($pageNum);
 // Find items
 $items = $pages->find($selector);
 
 // Table fields to display
+// can be field_name.subfield_name or page method name eg: "test()"
 $table_fields = !empty($table_fields) ? $table_fields : [];
-$table_fields = $input->get->table_fields ? $sanitizer->text($input->get->table_fields) : $table_fields;
+$table_fields = $helper->prop('table_fields', $table_fields);
+
+// Title - display title in table, enabled ("true") by default, set "false" (string) to disable
+$title = isset($title) ? $title : 1;
+$title = $helper->prop('title', $title);
 
 // Page References table field
-$references = !empty($references) ? $references : "";
-$references = $input->get->references ? $sanitizer->text($input->get->references) : $references;
-$references = $references == "true" ? true : false;
+$references = isset($references) ? $references : "";
+$references = $helper->prop('references', $references);
 
 // Close modal after page edit
-$close_modal = !empty($close_modal) ? $close_modal : "";
-$close_modal = $input->get->close_modal ? $sanitizer->text($input->get->close_modal) : $close_modal;
-$close_modal = $close_modal == "true" ? "true" : "false";
+$close_modal = isset($close_modal) ? $close_modal : 1;
+$close_modal = $helper->prop('close_modal', $close_modal);
 
-// Hide tabs on modal page edit
-$remove_tabs = !empty($remove_tabs) ? $remove_tabs : "";
+// Hide tabs on modal page edit when page has references
+$remove_tabs = isset($remove_tabs) ? $remove_tabs : 1;
 $remove_tabs = $input->get->remove_tabs ? $sanitizer->text($input->get->remove_tabs) : $remove_tabs;
-$remove_tabs = $remove_tabs == "true" ? "true" : "false";
 
-// remove delete tab on modal page edit
-$delete_tab = !empty($delete_tab) ? $delete_tab : "";
-$delete_tab = $input->get->delete_tab ? $sanitizer->text($input->get->delete_tab) : $delete_tab;
-$delete_tab = $delete_tab == "true" ? "true" : "false";
+// Remove delete tab on modal page edit
+$delete_tab = isset($delete_tab) ? $delete_tab : 1;
+$delete_tab = $helper->prop('delete_tab', $delete_tab);
+
+// Remove delete tab if page has references
+$delete_tab_ref = isset($delete_tab_ref) ? $delete_tab_ref : 0;
+$delete_tab_ref = $helper->prop('delete_tab_ref', $delete_tab_ref);
+
+// remove settings tab on modal page edit
+$settings_tab = isset($settings_tab) ? $settings_tab : 1;
+$settings_tab = $helper->prop('settings_tab', $settings_tab);
 
 // Show table actions publish-unpublish, trash
-$table_actions = !empty($table_actions) ? $table_actions : "true";
-$table_actions = $input->get->table_actions ? $sanitizer->text($input->get->table_actions) : $table_actions;
-$table_actions = $table_actions == "true" ? true : false;
-
-// Multi-language
-// Show multilang td with name of the page in other languages
-$multilang = !empty($multilang) ? $multilang : "true";
-$multilang = $input->get->multilang ? $sanitizer->text($input->get->multilang) : $multilang;
-$multilang = $multilang == "true" ? true : false;
-
-// Display icon in the first column
-$icon = !empty($icon) ? $icon : "";
-$icon = $input->get->icon ? $sanitizer->text($input->get->icon) : $icon;
+$table_actions = isset($table_actions) ? $table_actions : 0;
+$table_actions = $helper->prop('table_actions', $table_actions);
 
 // Dropdown file path
 $dropdown_file = !empty($dropdown_file) ? $dropdown_file : "";
-$dropdown_file = $input->get->dropdown_file ? $sanitizer->text($input->get->dropdown_file) : $dropdown_file;
+$dropdown_file = $helper->prop('dropdown_file', $dropdown_file, "text");
 
-// Label
-$label = !empty($label) ? $label : "";
-$label = $input->get->label ? $sanitizer->text($input->get->label) : $label;
+// table_count
+$i = 1;
+$table_count = !empty($table_count) ? $table_count : 0;
+$table_count = $helper->prop('table_count', $table_count);
+
+// CSS Class
+$table_class = !empty($table_class) ? " $table_class" : " uk-table-striped";
+$table_class = $helper->prop('table_class', $table_class, "text");
 
 // Htmx data to pass to the table.php when loaded via htmx
 $htmx_data = [
   'selector' => $selector,
+  'pageNum' => $pageNum,
   'table_fields' => $table_fields,
+  'title' => $title,
   'references' => $references,
-  'close_modal' => $close_modal,
-  'remove_tabs' => $remove_tabs,
-  'delete_tab' => $delete_tab,
+  'close_modal' => $close_modal ? "true" : "false",
+  'remove_tabs' => $remove_tabs ? "true" : "false",
+  'delete_tab' => $delete_tab ? "true" : "false",
+  'delete_tab_ref' => $delete_tab_ref ? "true" : "false",
+  'settings_tab' => $settings_tab ? "true" : "false",
   'table_actions' => $table_actions,
-  'icon' => $icon,
   'dropdown_file' => $dropdown_file,
-  'label' => $label,
+  'table_count' => $table_count,
+  'table_class' => $table_class,
 ];
 
 // Convert table_fields to array if it is json
 $table_fields = is_array($table_fields) ? $table_fields : json_decode($table_fields, true);
 ?>
 
-<div id="admin-table-htmx" data-htmx="<?= __DIR__ . "/admin-table-htmx.php" ?>" data-vals='<?= $AdminHelper->json_encode($htmx_data) ?>' data-close-modal="<?= $close_modal ?>">
+<div id="admin-table-htmx" data-htmx="<?= __DIR__ . "/admin-table.php" ?>" data-vals='<?= $AdminHelper->json_encode($htmx_data) ?>' data-close-modal="<?= $close_modal ?>" class="uk-overflow-auto">
 
-  <table class="AdminDataTableSortable uk-table uk-table-striped uk-table-middle uk-table-small uk-margin-remove">
+  <table class="AdminDataTableSortable uk-margin-remove uk-table uk-table-middle uk-table-small uk-margin-remove <?= $table_class ?>">
 
     <thead>
       <tr>
@@ -93,18 +99,12 @@ $table_fields = is_array($table_fields) ? $table_fields : json_decode($table_fie
           <th class="uk-table-shrink"></th>
         <?php endif; ?>
 
-        <?php if (!empty($icon)) : ?>
+        <?php if ($table_count) : ?>
           <th class="uk-table-shrink"></th>
         <?php endif; ?>
 
-        <th><?= __('Title') ?></th>
-
-        <?php if (!empty($label)) : ?>
-          <th></th>
-        <?php endif; ?>
-
-        <?php if ($multilang && !empty($languages) && count($languages) > 0) : ?>
-          <th><?= __('Multi-language') ?></th>
+        <?php if ($title) : ?>
+          <th><?= __('Item') ?></th>
         <?php endif; ?>
 
         <?php foreach ($table_fields as $key => $value) : ?>
@@ -130,16 +130,20 @@ $table_fields = is_array($table_fields) ? $table_fields : json_decode($table_fie
           // add is-hidden class if page is hidden or unpublished
           $class = $item->isHidden() || $item->isUnpublished() ? "is-hidden" : "";
 
-          // remove modal page edit tabs
-          $remove_modal_tabs = $remove_tabs == "true" ? true : false;
-          // if remove_delete_tab and item has references remove delete tab
-          $remove_delete_tab = $delete_tab == "true" ? true : false;
-          $remove_delete_tab = $remove_delete_tab && $item->references()->count > 0 ? true : $remove_delete_tab;
+          $delete_tab = $delete_tab == "false" ? true : false;
+          $delete_tab = $delete_tab_ref == "true" && $item->references()->count > 0 ? true : $delete_tab;
+
           // set modal options
-          $modal_options = ['container' => 1, 'height' => '100%', 'remove_tabs' => $remove_modal_tabs, 'remove_delete_tab' => $remove_delete_tab];
+          $modal_options = [
+            'container' => 1,
+            'height' => '100%',
+            'remove_tabs' => ($delete_tab == "true" && $item->references()->count > 0) ? true : false,
+            'remove_delete_tab' => $delete_tab,
+            'remove_settings_tab' => $settings_tab == "false" ? true : false,
+          ];
 
           // Page reference link
-          $pageRefLink = $wirekit->pageRefLink($item);
+          $pageRefLink = isset($wirekit) ? $wirekit->pageRefLink($item) : "";
         ?>
           <tr class="<?= $class ?>">
 
@@ -153,41 +157,38 @@ $table_fields = is_array($table_fields) ? $table_fields : json_decode($table_fie
               </td>
             <?php endif; ?>
 
-            <?php if (!empty($icon)) : ?>
-              <td class="uk-table-shrink uk-text-center">
-                <i class="<?= $icon ?>"></i>
+            <?php if ($table_count) : ?>
+              <td class="uk-table-shrink uk-text-center uk-text-small">
+                <?= $i++ ?>.
               </td>
             <?php endif; ?>
 
-            <td>
-              <a href="#" <?= $AdminHelper->htmx()->pageEditModal($item->id, $modal_options) ?>>
-                <?= $item->title ?>
-              </a>
-            </td>
+            <?php if ($title) : ?>
+              <td class="uk-link-heading">
+                <?php if (method_exists($item, 'admin_table_title')) : ?>
+                  <a href="#" <?= $AdminHelper->htmx()->pageEditModal($item->id, $modal_options) ?>>
+                    <?= $item->admin_table_title() ?>
+                  </a>
+                <?php else : ?>
+                  <a href="#" <?= $AdminHelper->htmx()->pageEditModal($item->id, $modal_options) ?>>
+                    <?= $item->title ?>
+                  </a>
+                <?php endif; ?>
+              </td>
+            <?php endif; ?>
 
             <?php if (!empty($label)) : ?>
               <td>
-                <label class="uk-label">
+                <label class="uk-label uk-label-primary uk-text-center uk-label-<?= $item->{$label} ?>" style="width: 120px;">
                   <?= $item->{$label} ?>
                 </label>
               </td>
             <?php endif; ?>
 
-            <?php if ($multilang && !empty($languages) && count($languages) > 1) : ?>
-              <td class="uk-text-small">
-                <?php
-                foreach ($languages as $lang) {
-                  if ($lang->name != "default") {
-                    echo $item->getLanguageValue($lang, 'title') . " ({$lang->name})<br />";
-                  }
-                }
-                ?>
-              </td>
-            <?php endif; ?>
-
             <!-- additional fields -->
             <?php foreach ($table_fields as $key => $value) :
-              $val = $item->{$value};
+              $value = str_replace("()", "", $value);
+              $val = method_exists($item, $value) ? $item->{$value}() : $item->{$value};
             ?>
               <td class="admin-table-<?= $sanitizer->fieldName($value) ?> uk-text-small">
                 <?= !empty($val) ? $val : "-" ?>
@@ -237,5 +238,5 @@ $table_fields = is_array($table_fields) ? $table_fields : json_decode($table_fie
 
 <?php
 // Render Pagination
-if (!$input->get->q) echo $items->renderPager();
+if (!$input->get->q && !$input->get->htmx) echo $items->renderPager();
 ?>

@@ -29,11 +29,10 @@ if ($this->input->get->modal && $this->input->get->id) {
       $process->removeTab('ProcessPageEditDelete');
     });
 
-    $this->addHookAfter('ProcessPageEdit::buildFormSettings', function ($event) {
-      $wrapper = $event->return;
-      $wrapper->collapsed = Inputfield::collapsedHidden;
-      $process = $event->object;
-      $process->removeTab('ProcessPageEditSettings');
+    $this->addHookAfter('ProcessPageEdit::buildForm', function ($event) {
+      $form = $event->arguments(0);
+      $form->attr('class', 'admin-helper-remove-tabs');
+      $event->return = $form;
     });
   } else {
 
@@ -47,11 +46,10 @@ if ($this->input->get->modal && $this->input->get->id) {
     }
 
     if ($this->input->get->remove_settings_tab) {
-      $this->addHookAfter('ProcessPageEdit::buildFormSettings', function ($event) {
-        $wrapper = $event->return;
-        $wrapper->collapsed = Inputfield::collapsedHidden;
-        $process = $event->object;
-        $process->removeTab('ProcessPageEditSettings');
+      $this->addHookAfter('ProcessPageEdit::buildForm', function ($event) {
+        $form = $event->arguments(0);
+        $form->attr('class', 'admin-helper-remove-tabs');
+        $event->return = $form;
       });
     }
   }

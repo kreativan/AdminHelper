@@ -1,3 +1,10 @@
+@admin-helper-border-radius: 3px;
+
+.admin-helper-remove-settings-tabs #_ProcessPageEditSettings,
+.admin-helper-remove-tabs #_ProcessPageEditSettings {
+  display: none !important;
+}
+
 /* =========================================================== 
   AdminHelper Less
 =========================================================== */
@@ -341,7 +348,7 @@ table .ui-sortable-helper {
 //--------------------------------------------------------
 
 .uk-button {
-  border-radius: 2px;
+  border-radius: @admin-helper-border-radius;
 }
 
 .uk-background-muted .uk-button-default:not(:hover) {
@@ -357,7 +364,7 @@ table .ui-sortable-helper {
 
   padding: 0;
   min-width: 160px;
-  border-radius: 3px;
+  border-radius: @admin-helper-border-radius;
   overflow: hidden;
   z-index: 99;
 
@@ -406,8 +413,18 @@ table .ui-sortable-helper {
     font-size: 13px;
   }
 
+  .uk-button-danger,
   .uk-button-primary {
     color: white !important;
+  }
+
+  .uk-button-default {
+    border-color: darken(@global-border, 10%) !important;
+    color: @global-emphasis-color !important;
+
+    &:hover {
+      background: @global-muted-background;
+    }
   }
 
 }
@@ -422,7 +439,7 @@ table .ui-sortable-helper {
 
 .uk-notification-message {
   font-size: 16px !important;
-  border-radius: 2px;
+  border-radius: @admin-helper-border-radius;
   box-shadow: 0 5px 7px rgba(0, 0, 0, 0.1);
 }
 
@@ -525,7 +542,7 @@ table .ui-sortable-helper {
 
 
 //------------------------------------------------- 
-//  `
+// HTMX Modal
 //-------------------------------------------------
 
 #htmx-modal {
@@ -552,6 +569,12 @@ table .ui-sortable-helper {
     &.uk-modal {
       padding-top: 25px !important;
       padding-bottom: 25px !important;
+    }
+  }
+
+  @media(max-width: 1600px) {
+    &.page-edit-modal {
+      padding: 25px !important;
     }
   }
 

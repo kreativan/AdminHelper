@@ -74,7 +74,8 @@ $email_templates = ($email_templates_selector != "") ? $pages->find($email_templ
   <div class="uk-modal-dialog uk-overflow-hidden uk-margin-auto-vertical uk-width-2xlarge">
 
     <div class="uk-modal-header uk-position-relative uk-visible@l uk-light">
-      <h3><?= __('Send Email') ?></h3>
+      <h3 class="uk-margin-remove"><?= __('Send Email') ?></h3>
+      <button class="uk-modal-close uk-position-center-right uk-margin-right" uk-close></button>
     </div>
 
     <div class="uk-modal-body Inputfields">
@@ -116,7 +117,7 @@ $email_templates = ($email_templates_selector != "") ? $pages->find($email_templ
         <?php endif; ?>
 
         <?php if ($email_templates != "" && $email_templates->count) : ?>
-          <div class="uk-margin">
+          <div class="uk-margin-bottom">
             <label class="uk-form-label uk-text-bold uk-text-uppercase">
               <i class="fa fa-html5"></i>
               Email Template:
@@ -204,9 +205,9 @@ $email_templates = ($email_templates_selector != "") ? $pages->find($email_templ
         </div>
 
         <?php if ($email_template == "") : ?>
-          <div class="uk-margin input-toggle">
+          <div class="uk-margin-small input-toggle">
             <?php
-            $AdminHelper->Markup()->render('trix-editor', ['load_assets' => true]);
+            $AdminHelper->render('markup/trix-editor', ['load_assets' => true]);
             ?>
             <?php if ($page_ref != "") : ?>
               <em class="uk-text-muted uk-text-small uk-margin-remove">

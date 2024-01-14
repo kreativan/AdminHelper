@@ -7,7 +7,14 @@ $src = $admin_url . "page/edit/?id={$page_id}&modal=1&front_end_modal=1&remove_t
 $no_container = $input->get->no_container;
 $no_container = !empty($no_container) && $no_container ? true : false;
 
-$title = $input->get->title ? $sanitizer->text($input->get->title) : $page("title|headline");
+$title = $input->get->title ? $sanitizer->text($input->get->title) : "";
+
+if ($title == "") {
+  $title = !empty($page->template->label) ? $page->template->label : $page->template->name;
+  $title = ucwords(str_replace("-", " ", $title));
+  $title .= $page->pb_options ? " ({$page->pb_options->pb_layout})" : "";
+}
+
 ?>
 
 <div id="htmx-modal" class="<?= !$no_container ? 'uk-modal-container' : '' ?>" uk-modal="bg-close: false;">

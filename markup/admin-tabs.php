@@ -2,19 +2,24 @@
 
 /** 
  * Admin Helper: admin-tabs 
+ * 
  * Need to pass array of tabs ['tab_name' => []]
  * @var string $tab['title']
  * @var string $tab['url']
  * @var string $tab['icon']
  * @var bool $tab['visible']
+ * 
+ * You can also pass @var $active_var or @var $active_tab - "./?$active_var=my_tab" 
+ * to change the active tab variable name (default is "tab" ?tab=my_tab)
+ * @example $AdminHelper->render("markup/admin-tabs", ['tabs' => $tabs, 'active_var' => 'my_var']);
  */
 
 namespace ProcessWire;
 
 $i = 0;
 $tabs = !empty($tabs) ? $tabs : [];
-$active_var = !empty($active_var) ? $active_var : "tab";
-
+$active_tab = !empty($active_tab) ? $active_tab : "tab";
+$active_var = !empty($active_var) ? $active_var : $active_tab;
 ?>
 
 <?php if (count($tabs) > 0) : ?>
