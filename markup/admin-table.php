@@ -7,6 +7,8 @@
 
 namespace ProcessWire;
 
+$i = 1;
+
 // Selector to find the pages
 $selector = isset($selector) ? $selector : "";
 $selector = $helper->prop('selector', $selector, "text");
@@ -84,16 +86,16 @@ $table_fields = is_array($table_fields) ? $table_fields : json_decode($table_fie
           // add is-hidden class if page is hidden or unpublished
           $class = $item->isHidden() || $item->isUnpublished() ? "is-hidden" : "";
 
-          $delete_tab = $delete_tab == "false" ? true : false;
-          $delete_tab = $delete_tab_ref == "true" && $item->references()->count > 0 ? true : $delete_tab;
+          // If $delete_tab_ref is true and page has references set $delete_tab to false to hide delete tab
+          $is_delete_tab = $delete_tab_ref && $item->references()->count > 0 ? false : $delete_tab;
 
           // set modal options
           $modal_options = [
             'container' => 1,
             'height' => '100%',
-            'remove_tabs' => ($delete_tab == "true" && $item->references()->count > 0) ? true : false,
-            'remove_delete_tab' => $delete_tab,
-            'remove_settings_tab' => $settings_tab == "false" ? true : false,
+            // 'remove_tabs' => $remove_tabs ? 0 : 1,
+            'remove_delete_tab' => $is_delete_tab ? 0 : 1,
+            'remove_settings_tab' => $settings_tab ? 0 : 1,
           ];
 
           // Page reference link

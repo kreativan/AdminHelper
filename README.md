@@ -43,6 +43,20 @@ $selector = "template=MY_TEMPLATE, limit=50, include=all, status!=trash, sort=-c
 $parent_id = $pages->get('template=MY_TEMPLATE')->id;
 $template_id = $templates->get('MY_TEMPLATE')->id;
 
+/** 
+ * Tabs 
+ */
+$helper->render('markup/admin-tabs.php', [
+  "tabs" => [
+    "my_tab" => [
+      'title' => 'My Tab',
+      'url' => "./?tab=my_tab",
+      'icon' => 'user',
+      'visible' => true,
+    ],
+  ]
+]);
+
 /**
  * Add new page button
  */
